@@ -2,56 +2,70 @@
 <html lang="uk">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Тестування ЄДКІ</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
-      --bg: #eef2f7;
+      --bg: #e9eff7;
+      --bg-grad: linear-gradient(180deg, #f5f9ff 0%, #e7eef8 55%, #dfe8f5 100%);
       --card: #ffffff;
-      --surface: #f7f9fc;
-      --text: #141c24;
-      --muted: #617182;
-      --accent: #1366d6;
-      --accent-hover: #0e4fa8;
-      --accent-soft: #eaf2fd;
-      --border: #dfe6ef;
-      --ok-bg: #e8f7ed;
-      --ok-border: #239947;
-      --ok-text: #14632c;
-      --bad-bg: #fdeceb;
-      --bad-border: #d93829;
-      --bad-text: #9e1b10;
+      --surface: #f5f8fc;
+      --surface-hover: #edf4ff;
+      --text: #0f172a;
+      --muted: #5b6b7e;
+      --accent: #1665d8;
+      --accent-hover: #114fb0;
+      --accent-soft: #e8f1ff;
+      --border: #dce4ef;
+      --ok-bg: #e7f7ed;
+      --ok-border: #229648;
+      --ok-text: #135e2b;
+      --bad-bg: #feeced;
+      --bad-border: #d63628;
+      --bad-text: #991b11;
       --neutral-bg: #eef2f7;
-      --neutral-border: #c9d4e3;
-      --neutral-text: #3b4a5a;
-      --shadow: 0 10px 30px rgba(15, 28, 46, 0.06);
+      --neutral-border: #c5d1e0;
+      --neutral-text: #384759;
+      --shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
+      --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.04);
     }
 
-    * { box-sizing: border-box; }
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
 
-    body {
+    html, body {
       margin: 0;
-      min-height: 100vh;
+      padding: 0;
+      width: 100%;
+      max-width: 100%;
+      overflow-x: clip;
+      min-height: 100dvh;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
-      background: radial-gradient(circle at top, #f7faff 0%, var(--bg) 65%);
+      background: var(--bg-grad);
       color: var(--text);
       line-height: 1.55;
+      -webkit-tap-highlight-color: transparent;
     }
 
     .container {
+      width: 100%;
       max-width: 780px;
       margin: 0 auto;
-      padding: 28px 16px 48px;
+      padding: 18px 14px 44px;
+      overflow-x: clip;
     }
 
     .topbar {
+      width: 100%;
+      max-width: 100%;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 18px;
-      padding: 16px 20px;
+      border-radius: 20px;
+      padding: 14px 16px;
       box-shadow: var(--shadow);
-      margin-bottom: 18px;
+      margin-bottom: 16px;
     }
 
     .topbar-row {
@@ -60,100 +74,150 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
-      font-size: 15px;
+      min-width: 0;
     }
 
     .stats-group {
       display: flex;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 8px;
       align-items: center;
+      min-width: 0;
+      flex: 1 1 auto;
     }
 
     .stat-pill {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 6px 12px;
+      padding: 6px 11px;
       border-radius: 999px;
       color: var(--muted);
-      font-size: 14px;
+      font-size: 13.5px;
+      max-width: 100%;
+      box-shadow: var(--shadow-sm);
     }
 
     .stat-pill strong {
       color: var(--text);
       font-weight: 700;
       font-variant-numeric: tabular-nums;
+      white-space: nowrap;
     }
 
     .stat-pill.timer-warn {
       background: var(--bad-bg);
-      border-color: #f4c7c3;
+      border-color: #f3c5c1;
       color: var(--bad-text);
     }
 
-    .stat-pill.timer-warn strong { color: var(--bad-text); }
+    .stat-pill.timer-warn strong {
+      color: var(--bad-text);
+    }
+
+    .profile-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: var(--accent-soft);
+      color: var(--accent);
+      border: 1px solid #c7dcff;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      max-width: 100%;
+      transition: background-color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .profile-chip:hover {
+      background: #dbe9ff;
+      border-color: #a9c9ff;
+    }
+
+    .profile-chip span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 190px;
+    }
 
     .progress-wrap {
       width: 100%;
       height: 7px;
-      background: #e6ecf3;
+      background: #e6edf5;
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 14px;
+      margin-top: 13px;
     }
 
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, #1366d6, #388bfd);
+      background: linear-gradient(90deg, var(--accent), #3b82f6);
       border-radius: 999px;
       transition: width 0.25s ease;
     }
 
     .card {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 22px;
-      padding: 28px 26px;
+      border-radius: 24px;
+      padding: 24px 22px;
       box-shadow: var(--shadow);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .question-text {
-      font-size: 19px;
-      font-weight: 600;
-      margin: 0 0 22px;
+      font-size: 18.5px;
+      font-weight: 650;
+      margin: 0 0 20px;
       color: var(--text);
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .options {
       display: flex;
       flex-direction: column;
-      gap: 11px;
+      gap: 10px;
+      width: 100%;
+      min-width: 0;
     }
 
     .option-btn {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       text-align: left;
-      padding: 14px 18px;
-      font-size: 15.5px;
+      padding: 14px 16px;
+      font-size: 15px;
       background: var(--surface);
       color: var(--text);
       border: 1.5px solid var(--border);
-      border-radius: 14px;
+      border-radius: 15px;
       cursor: pointer;
+      overflow-wrap: anywhere;
+      word-break: break-word;
       transition: transform 0.1s ease, border-color 0.15s ease, background-color 0.15s ease;
     }
 
     .option-btn:hover:not(:disabled) {
       border-color: var(--accent);
-      background: var(--accent-soft);
+      background: var(--surface-hover);
       transform: translateY(-1px);
     }
 
-    .option-btn:disabled { cursor: default; }
+    .option-btn:disabled {
+      cursor: default;
+    }
 
     .option-btn.correct {
       background: var(--ok-bg);
@@ -169,12 +233,14 @@
     }
 
     .feedback {
-      margin-top: 20px;
-      padding: 13px 16px;
+      margin-top: 18px;
+      padding: 13px 15px;
       border-radius: 14px;
       font-weight: 600;
-      font-size: 15px;
+      font-size: 14.5px;
       display: none;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
     .feedback.ok {
@@ -196,68 +262,74 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
-      margin-top: 24px;
+      gap: 10px;
+      margin-top: 22px;
       padding-top: 18px;
-      border-top: 1px solid #eef2f6;
+      border-top: 1px solid #edf2f7;
     }
 
     button.primary {
       background: var(--accent);
       color: #ffffff;
       border: none;
-      border-radius: 12px;
-      padding: 12px 22px;
+      border-radius: 13px;
+      padding: 12px 20px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      box-shadow: 0 6px 16px rgba(22, 101, 216, 0.22);
+      transition: background-color 0.15s ease, transform 0.1s ease;
     }
 
-    button.primary:hover:not(:disabled) { background: var(--accent-hover); }
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
 
     button.primary:disabled {
       opacity: 0.45;
       cursor: not-allowed;
+      box-shadow: none;
     }
 
     button.secondary {
       background: var(--surface);
       color: var(--muted);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 13px;
       padding: 10px 16px;
       font-size: 14px;
-      font-weight: 500;
+      font-weight: 600;
       cursor: pointer;
       transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
     }
 
     button.secondary:hover {
       color: var(--text);
-      border-color: #c7d2e0;
-      background: #eff3f8;
+      border-color: #c5d1e0;
+      background: #edf2f8;
     }
 
     button.danger {
       background: var(--bad-bg);
       color: var(--bad-text);
-      border: 1px solid #f4c7c3;
-      border-radius: 12px;
+      border: 1px solid #f3c5c1;
+      border-radius: 13px;
       padding: 10px 16px;
       font-size: 14px;
       font-weight: 600;
       cursor: pointer;
     }
 
-    button.danger:hover { background: #fbd9d6; }
+    button.danger:hover {
+      background: #fcd9dc;
+    }
 
     .badge-pass, .badge-fail, .badge-partial {
       display: inline-block;
-      padding: 7px 16px;
+      padding: 7px 15px;
       border-radius: 999px;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13.5px;
     }
 
     .badge-pass {
@@ -280,39 +352,42 @@
 
     .summary-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 14px;
-      margin: 22px 0;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin: 20px 0;
     }
 
     .summary-box {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
-      padding: 16px 18px;
+      padding: 15px 16px;
+      min-width: 0;
     }
 
     .summary-box span {
       display: block;
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--muted);
       margin-bottom: 4px;
     }
 
     .summary-box strong {
-      font-size: 24px;
+      font-size: 22px;
       color: var(--text);
+      overflow-wrap: anywhere;
     }
 
     .profile-form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      display: flex;
       gap: 10px;
-      margin: 16px 0 12px;
+      flex-wrap: wrap;
+      margin: 16px 0 10px;
     }
 
     .profile-input {
-      width: 100%;
+      flex: 1 1 200px;
+      min-width: 0;
       padding: 11px 14px;
       font-size: 15px;
       border: 1.5px solid var(--border);
@@ -327,15 +402,11 @@
       background: #ffffff;
     }
 
-    .profile-input[readonly] {
-      background: #eef2f7;
-      color: var(--muted);
-    }
-
     .sync-note {
       font-size: 13px;
       color: var(--muted);
-      margin-bottom: 18px;
+      margin-bottom: 16px;
+      overflow-wrap: anywhere;
     }
 
     .history-list {
@@ -350,15 +421,16 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
-      gap: 12px;
-      padding: 14px 16px;
+      gap: 10px;
+      padding: 13px 15px;
       background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 14px;
+      border-radius: 15px;
+      min-width: 0;
     }
 
     .history-meta {
-      font-size: 13px;
+      font-size: 12.5px;
       color: var(--muted);
     }
 
@@ -377,12 +449,36 @@
       text-align: center;
     }
 
-    @media (max-width: 520px) {
-      .card {
-        padding: 20px 16px;
+    @media (max-width: 560px) {
+      .container {
+        padding: 12px 10px 36px;
+      }
+      .topbar {
+        padding: 12px 13px;
         border-radius: 18px;
       }
-      .question-text { font-size: 17px; }
+      .stat-pill {
+        padding: 5px 10px;
+        font-size: 12.5px;
+      }
+      .profile-chip {
+        width: 100%;
+        justify-content: center;
+      }
+      .profile-chip span {
+        max-width: 100%;
+      }
+      .card {
+        padding: 18px 14px;
+        border-radius: 20px;
+      }
+      .question-text {
+        font-size: 17px;
+      }
+      .option-btn {
+        padding: 13px 14px;
+        font-size: 14.5px;
+      }
       .actions {
         flex-direction: column-reverse;
         align-items: stretch;
@@ -403,7 +499,9 @@
           <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
           <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
         </div>
-        <button class="secondary" id="openProfileBtn" type="button">Профіль: <span id="topProfileName">Студент</span></button>
+        <button class="profile-chip" id="openProfileBtn" type="button">
+          <span>Профіль: <strong id="topProfileName">Студент</strong></span>
+        </button>
       </div>
       <div class="progress-wrap">
         <div class="progress-bar" id="progressBar"></div>
@@ -443,27 +541,20 @@
     </div>
 
     <div class="card" id="profileCard" style="display: none;">
-      <h2 style="margin: 0 0 6px; font-size: 22px;">Профіль Telegram</h2>
-      <p style="color: var(--muted); margin: 0;">Дані закріплюються за вашим Telegram-профілем на бекенді.</p>
+      <h2 style="margin: 0 0 6px; font-size: 22px;">Профіль</h2>
+      <p style="color: var(--muted); margin: 0;">Збережені результати та статистика ваших спроб.</p>
 
       <form class="profile-form" id="profileForm">
-        <input
-          class="profile-input"
-          id="tgKeyInput"
-          type="text"
-          maxlength="64"
-          placeholder="Ключ профілю (наприклад, tg_123456789)"
-        />
         <input
           class="profile-input"
           id="profileNameInput"
           type="text"
           maxlength="40"
-          placeholder="Ім'я або підпис"
+          placeholder="Ваше ім'я"
         />
-        <button class="primary" type="submit">Зберегти та синхронізувати</button>
+        <button class="primary" type="submit">Зберегти ім'я</button>
       </form>
-      <div class="sync-note" id="syncStatusText">Синхронізація: підключення...</div>
+      <div class="sync-note" id="syncStatusText">Стан: підключення...</div>
 
       <div class="summary-grid">
         <div class="summary-box">
@@ -495,8 +586,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v1_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v1";
+    const CACHE_PREFIX = "edki_tg_state_v2_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v2";
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
@@ -510,6 +601,12 @@
       return tgUser && tgUser.id ? tgUser : null;
     }
 
+    function detectTelegramName() {
+      const tgUser = getTelegramUser();
+      if (!tgUser) return "Студент";
+      return [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ").trim() || tgUser.username || "Студент";
+    }
+
     function detectProfileKey() {
       const tgUser = getTelegramUser();
       if (tgUser) {
@@ -520,12 +617,6 @@
         if (saved && saved.trim()) return saved.trim();
       } catch {}
       return "tg_guest";
-    }
-
-    function detectDefaultName() {
-      const tgUser = getTelegramUser();
-      if (!tgUser) return "Студент";
-      return [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ").trim() || tgUser.username || "Студент";
     }
 
     function shuffleArray(items) {
@@ -588,8 +679,12 @@
       }
     }
 
+    const tgUserInit = getTelegramUser();
     let profileKey = detectProfileKey();
-    let profile = { name: detectDefaultName(), history: [] };
+    let profile = {
+      name: tgUserInit ? detectTelegramName() : "Студент",
+      history: [],
+    };
     let pool = null;
     let attemptQuestions = [];
     let currentIdx = 0;
@@ -623,7 +718,6 @@
     const resultToProfileBtnEl = document.getElementById("resultToProfileBtn");
     const backToQuizBtnEl = document.getElementById("backToQuizBtn");
     const profileFormEl = document.getElementById("profileForm");
-    const tgKeyInputEl = document.getElementById("tgKeyInput");
     const profileNameInputEl = document.getElementById("profileNameInput");
     const clearHistoryBtnEl = document.getElementById("clearHistoryBtn");
     const syncStatusTextEl = document.getElementById("syncStatusText");
@@ -673,9 +767,9 @@
           body: JSON.stringify(snapshot),
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        syncStatusTextEl.textContent = `Закріплено за профілем ${key} (синхронізовано)`;
+        syncStatusTextEl.textContent = "Прогрес збережено";
       } catch {
-        syncStatusTextEl.textContent = `Збережено локально для ${key} (перевірте зв'язок із бекендом)`;
+        syncStatusTextEl.textContent = "Збережено локально";
       }
     }
 
@@ -718,14 +812,12 @@
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const remote = await res.json();
         saveLocal(key, remote);
-        syncStatusTextEl.textContent = `Завантажено профіль ${key} із сервера`;
+        syncStatusTextEl.textContent = "Дані актуальні";
         return remote;
       } catch {
         const cached = loadLocal(key);
-        syncStatusTextEl.textContent = cached
-          ? `Використано локальний кеш для ${key}`
-          : `Новий профіль ${key} (очікування бекенда)`;
-        return cached || { name: detectDefaultName(), history: [], usedIds: [], activeSession: null };
+        syncStatusTextEl.textContent = "Локальний режим";
+        return cached || { name: detectTelegramName(), history: [], usedIds: [], activeSession: null };
       }
     }
 
@@ -800,10 +892,7 @@
     }
 
     function renderProfileView() {
-      const isTg = Boolean(getTelegramUser());
       topProfileNameEl.textContent = profile.name;
-      tgKeyInputEl.value = profileKey;
-      tgKeyInputEl.readOnly = isTg;
       profileNameInputEl.value = profile.name;
 
       const totalAttempts = profile.history.length;
@@ -1037,13 +1126,24 @@
       renderQuestion();
     }
 
-    async function loadProfileIntoApp(key, overrideName = null) {
+    async function loadProfileIntoApp(key) {
       const allQuestions = pool ? pool.allQuestions : await fetchQuestions();
       const remote = await fetchStateFromBackend(key);
+      const tgUser = getTelegramUser();
+      const tgName = detectTelegramName();
+
+      let resolvedName = "Студент";
+      if (tgUser && tgName !== "Студент") {
+        resolvedName = tgName;
+      } else if (typeof remote.name === "string" && remote.name.trim()) {
+        resolvedName = remote.name.trim();
+      } else if (tgName) {
+        resolvedName = tgName;
+      }
 
       profileKey = key;
       profile = {
-        name: overrideName || (typeof remote.name === "string" && remote.name.trim() ? remote.name.trim() : detectDefaultName()),
+        name: resolvedName,
         history: Array.isArray(remote.history) ? remote.history : [],
       };
       pool = new QuestionPool(allQuestions, remote.usedIds || []);
@@ -1055,6 +1155,10 @@
         resumeAttempt(active);
       } else {
         startAttempt();
+      }
+
+      if (tgUser && resolvedName !== remote.name) {
+        syncProgress(true);
       }
     }
 
@@ -1076,23 +1180,12 @@
     resultToProfileBtnEl.addEventListener("click", openProfile);
     backToQuizBtnEl.addEventListener("click", closeProfile);
 
-    profileFormEl.addEventListener("submit", async (e) => {
+    profileFormEl.addEventListener("submit", (e) => {
       e.preventDefault();
-      const isTg = Boolean(getTelegramUser());
-      const nextKey = isTg ? profileKey : (tgKeyInputEl.value.trim() || "tg_guest");
-      const nextName = profileNameInputEl.value.trim() || detectDefaultName();
-
-      if (nextKey !== profileKey) {
-        stopTimer();
-        await loadProfileIntoApp(nextKey, nextName);
-        syncProgress(true);
-        renderProfileView();
-      } else {
-        profile.name = nextName;
-        topProfileNameEl.textContent = profile.name;
-        syncProgress(true);
-        renderProfileView();
-      }
+      profile.name = profileNameInputEl.value.trim() || detectTelegramName() || "Студент";
+      topProfileNameEl.textContent = profile.name;
+      syncProgress(true);
+      renderProfileView();
     });
 
     clearHistoryBtnEl.addEventListener("click", () => {
