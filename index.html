@@ -115,6 +115,28 @@
       white-space: nowrap;
     }
 
+    .stat-pill.active-pill {
+      background: var(--ok-bg);
+      border-color: var(--ok-border);
+      color: var(--ok-text);
+      font-weight: 600;
+    }
+
+    .stat-pill.active-pill strong {
+      color: var(--ok-text);
+    }
+
+    .stat-pill.inactive-pill {
+      background: var(--neutral-bg);
+      border-color: var(--neutral-border);
+      color: var(--neutral-text);
+      font-weight: 600;
+    }
+
+    .stat-pill.inactive-pill strong {
+      color: var(--neutral-text);
+    }
+
     .stat-pill.mode-pill {
       background: var(--accent-soft);
       border-color: var(--accent-border);
@@ -191,9 +213,39 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
+    .active-session-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 13px 15px;
+      background: var(--ok-bg);
+      border: 1px solid var(--ok-border);
+      border-radius: 16px;
+      margin: 14px 0;
+      min-width: 0;
+    }
+
+    .active-session-banner.idle {
+      background: var(--surface);
+      border-color: var(--border);
+    }
+
+    .active-session-text strong {
+      display: block;
+      font-size: 14.5px;
+      color: var(--text);
+    }
+
+    .active-session-text span {
+      font-size: 12.5px;
+      color: var(--muted);
+    }
+
     .nav-panel {
       margin-bottom: 18px;
-      padding: 12px;
+      padding: 12px 13px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 16px;
@@ -205,6 +257,7 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 10px;
       font-size: 12.5px;
@@ -212,17 +265,44 @@
       font-weight: 600;
     }
 
+    .nav-legend {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 11.5px;
+      font-weight: 500;
+    }
+
+    .nav-legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .nav-dot.ok { background: var(--ok-border); }
+    .nav-dot.bad { background: var(--bad-border); }
+    .nav-dot.cur { background: var(--accent); }
+
     .nav-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
       gap: 6px;
-      max-height: 118px;
+      max-height: 112px;
       overflow-y: auto;
-      padding-right: 2px;
+      padding: 2px;
+      scrollbar-width: thin;
     }
 
     .nav-num-btn {
-      height: 32px;
+      height: 31px;
       border-radius: 9px;
       border: 1px solid var(--border);
       background: var(--card);
@@ -252,8 +332,7 @@
     }
 
     .nav-num-btn.active {
-      outline: 2px solid var(--accent);
-      outline-offset: 1px;
+      box-shadow: inset 0 0 0 2px var(--accent);
       border-color: var(--accent);
       background: var(--accent-soft);
       color: var(--accent);
@@ -261,12 +340,12 @@
     }
 
     .nav-num-btn.answered-ok.active {
-      filter: brightness(0.97);
+      box-shadow: inset 0 0 0 2px var(--ok-text);
       color: var(--ok-text);
     }
 
     .nav-num-btn.answered-bad.active {
-      filter: brightness(0.97);
+      box-shadow: inset 0 0 0 2px var(--bad-text);
       color: var(--bad-text);
     }
 
@@ -606,7 +685,7 @@
     .sync-note {
       font-size: 13px;
       color: var(--muted);
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       overflow-wrap: anywhere;
     }
 
@@ -674,7 +753,7 @@
         border-radius: 20px;
       }
       .nav-grid {
-        grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(31px, 1fr));
       }
       .question-text {
         font-size: 17px;
@@ -702,6 +781,7 @@
           <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
           <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
           <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
+          <div class="stat-pill active-pill" id="activeStatusPill">Спроба: <strong id="activeStatusLabel">Активна</strong></div>
           <div class="stat-pill mode-pill" id="modePill" style="display: none;">Над помилками</div>
         </div>
         <button class="profile-chip" id="openProfileBtn" type="button">
@@ -716,8 +796,12 @@
     <div class="card" id="quizCard">
       <div class="nav-panel" id="navPanel">
         <div class="nav-header">
-          <span>Навігація по питаннях</span>
-          <span id="navAnsweredSummary">0 відповідей</span>
+          <span>Навігація по питаннях · <strong id="navAnsweredSummary">0 / 0</strong></span>
+          <span class="nav-legend">
+            <span class="nav-legend-item"><i class="nav-dot cur"></i>Поточне</span>
+            <span class="nav-legend-item"><i class="nav-dot ok"></i>Вірно</span>
+            <span class="nav-legend-item"><i class="nav-dot bad"></i>Помилка</span>
+          </span>
         </div>
         <div class="nav-grid" id="navGrid"></div>
       </div>
@@ -778,10 +862,18 @@
       </form>
       <div class="sync-note" id="syncStatusText">Стан: підключення...</div>
 
+      <div class="active-session-banner idle" id="profileActiveSessionBanner">
+        <div class="active-session-text">
+          <strong id="profileActiveTitle">Активна спроба відсутня</strong>
+          <span id="profileActiveDesc">Можна розпочати нову спробу або тренування над помилками</span>
+        </div>
+        <button class="primary" id="resumeActiveSessionBtn" type="button" style="display: none;">Продовжити спробу</button>
+      </div>
+
       <div class="review-banner">
         <div class="review-banner-text">
           <strong>Робота над помилками</strong>
-          <span id="errorPoolDesc">Питань для повторення: 0</span>
+          <span id="errorPoolDesc">Спільний пул помилок з усіх спроб: 0</span>
         </div>
         <button class="secondary" id="profileReviewMistakesBtn" type="button" disabled>Почати тренування</button>
       </div>
@@ -816,8 +908,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v6_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v6";
+    const CACHE_PREFIX = "edki_tg_state_v8_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v8";
 
     function normalizeHexColor(value) {
       if (!value || typeof value !== "string") return null;
@@ -1073,7 +1165,7 @@
     let currentIdx = 0;
     let score = 0;
     let answeredCount = 0;
-    let attemptMode = "full";
+    let attemptMode = "full"; // "full" | "mistakes"
     let remainingMs = DURATION_MS;
     let lastTickMs = null;
     let timerInterval = null;
@@ -1085,6 +1177,8 @@
     const scoreCounterEl = document.getElementById("scoreCounter");
     const timerPillEl = document.getElementById("timerPill");
     const timerCounterEl = document.getElementById("timerCounter");
+    const activeStatusPillEl = document.getElementById("activeStatusPill");
+    const activeStatusLabelEl = document.getElementById("activeStatusLabel");
     const modePillEl = document.getElementById("modePill");
     const progressBarEl = document.getElementById("progressBar");
     const navGridEl = document.getElementById("navGrid");
@@ -1108,10 +1202,18 @@
     const backToQuizBtnEl = document.getElementById("backToQuizBtn");
     const profileFormEl = document.getElementById("profileForm");
     const profileNameInputEl = document.getElementById("profileNameInput");
+    const profileActiveSessionBannerEl = document.getElementById("profileActiveSessionBanner");
+    const profileActiveTitleEl = document.getElementById("profileActiveTitle");
+    const profileActiveDescEl = document.getElementById("profileActiveDesc");
+    const resumeActiveSessionBtnEl = document.getElementById("resumeActiveSessionBtn");
     const errorPoolDescEl = document.getElementById("errorPoolDesc");
     const profileReviewMistakesBtnEl = document.getElementById("profileReviewMistakesBtn");
     const clearHistoryBtnEl = document.getElementById("clearHistoryBtn");
     const syncStatusTextEl = document.getElementById("syncStatusText");
+
+    function hasActiveAttempt() {
+      return !attemptSaved && Array.isArray(attemptQuestions) && attemptQuestions.length > 0;
+    }
 
     function buildErrorBankFromData(historyList, savedErrorBank) {
       const bankMap = new Map();
@@ -1247,7 +1349,7 @@
     }
 
     function buildSessionSnapshot() {
-      if (attemptSaved || attemptQuestions.length === 0) return null;
+      if (!hasActiveAttempt()) return null;
       return {
         attemptQuestions,
         answersByIndex,
@@ -1358,7 +1460,7 @@
 
     function renderTimer() {
       timerCounterEl.textContent = formatRemainingTime(remainingMs);
-      if (attemptMode === "full" && remainingMs <= 10 * 60 * 1000) {
+      if (attemptMode === "full" && hasActiveAttempt() && remainingMs <= 10 * 60 * 1000) {
         timerPillEl.classList.add("timer-warn");
       } else {
         timerPillEl.classList.remove("timer-warn");
@@ -1366,7 +1468,7 @@
     }
 
     function stepTimer() {
-      if (attemptSaved || attemptQuestions.length === 0) return;
+      if (!hasActiveAttempt()) return;
       const now = Date.now();
       if (lastTickMs !== null && !document.hidden) {
         const elapsed = Math.max(0, now - lastTickMs);
@@ -1390,7 +1492,7 @@
     }
 
     function stopTimer() {
-      if (!attemptSaved && attemptQuestions.length > 0 && lastTickMs !== null && !document.hidden) {
+      if (hasActiveAttempt() && lastTickMs !== null && !document.hidden) {
         const now = Date.now();
         remainingMs = Math.max(0, remainingMs - Math.max(0, now - lastTickMs));
         syncProgress(true);
@@ -1420,14 +1522,31 @@
     function renderErrorPoolBlock() {
       const count = Array.isArray(profile.errorBank) ? profile.errorBank.length : 0;
       errorPoolDescEl.textContent = count > 0
-        ? `Питань для повторення: ${count}`
-        : "Поки що немає помилок із попередніх спроб";
+        ? `Спільний пул помилок з усіх спроб: ${count}`
+        : "Поки що немає помилок з повних або неповних спроб";
       profileReviewMistakesBtnEl.disabled = count === 0;
+    }
+
+    function renderActiveSessionBanner() {
+      const active = hasActiveAttempt();
+      if (active) {
+        profileActiveSessionBannerEl.classList.remove("idle");
+        const modeText = attemptMode === "mistakes" ? "Робота над помилками" : "Основна спроба";
+        profileActiveTitleEl.textContent = `Активна спроба · ${modeText}`;
+        profileActiveDescEl.textContent = `Відповідей: ${answeredCount} з ${attemptQuestions.length} · поточне №${Math.min(currentIdx + 1, attemptQuestions.length)}`;
+        resumeActiveSessionBtnEl.style.display = "inline-block";
+      } else {
+        profileActiveSessionBannerEl.classList.add("idle");
+        profileActiveTitleEl.textContent = "Активна спроба відсутня";
+        profileActiveDescEl.textContent = "Поточну спробу завершено — можна почати нову або тренування";
+        resumeActiveSessionBtnEl.style.display = "none";
+      }
     }
 
     function renderProfileView() {
       topProfileNameEl.textContent = profile.name;
       profileNameInputEl.value = profile.name;
+      renderActiveSessionBanner();
       renderErrorPoolBlock();
 
       const totalAttempts = profile.history.length;
@@ -1460,7 +1579,7 @@
           : "";
         const modeLabel = entry.mode === "mistakes"
           ? `Над помилками (${entry.answeredCount} питань)`
-          : (entry.fullRun ? "Повна спроба (150)" : `Неповна спроба (${entry.answeredCount} питань)`);
+          : (entry.fullRun ? "Повна спроба" : `Неповна спроба (${entry.answeredCount} питань)`);
         left.innerHTML = `
           <div class="history-score">${entry.score} / ${entry.denominator} (${entry.percentage}%)</div>
           <div class="history-meta">${modeLabel}${mistakesPart} · ${formatDate(entry.date)}</div>
@@ -1469,7 +1588,7 @@
         const badge = document.createElement("span");
         if (entry.mode === "mistakes") {
           badge.className = "badge-partial";
-          badge.textContent = "Тренування";
+          badge.textContent = "Над помилками";
         } else if (entry.fullRun) {
           badge.className = entry.passed ? "badge-pass" : "badge-fail";
           badge.textContent = entry.passed ? "Складено" : "Не складено";
@@ -1493,22 +1612,40 @@
       renderProfileView();
     }
 
+    function resumeActiveSessionFromProfile() {
+      if (!hasActiveAttempt()) return;
+      profileCardEl.style.display = "none";
+      resultCardEl.style.display = "none";
+      quizCardEl.style.display = "block";
+      if (attemptMode === "full") {
+        startTimer();
+      } else {
+        stopTimer();
+        renderTimer();
+      }
+      renderQuestion();
+    }
+
     function closeProfile() {
       profileCardEl.style.display = "none";
-      if (previousView === "resultCard") {
+      if (!hasActiveAttempt() && previousView === "resultCard") {
         resultCardEl.style.display = "block";
-      } else {
+      } else if (hasActiveAttempt()) {
         quizCardEl.style.display = "block";
-        if (!attemptSaved && attemptQuestions.length > 0) {
+        if (attemptMode === "full") {
           startTimer();
         }
+      } else {
+        resultCardEl.style.display = "block";
       }
     }
 
     function renderQuestionNav() {
       const total = attemptQuestions.length;
-      navAnsweredSummaryEl.textContent = `${answeredCount} з ${total}`;
+      navAnsweredSummaryEl.textContent = `${answeredCount} / ${total}`;
       navGridEl.innerHTML = "";
+
+      let activeBtnEl = null;
 
       for (let i = 0; i < total; i++) {
         const btn = document.createElement("button");
@@ -1520,18 +1657,25 @@
         if (ans && typeof ans === "object") {
           btn.classList.add(ans.isCorrect ? "answered-ok" : "answered-bad");
         }
-        if (i === currentIdx) {
+        if (i === currentIdx && hasActiveAttempt()) {
           btn.classList.add("active");
+          activeBtnEl = btn;
         }
 
         btn.addEventListener("click", () => {
-          if (i === currentIdx || attemptSaved) return;
+          if (i === currentIdx || !hasActiveAttempt()) return;
           currentIdx = i;
           syncProgress();
           renderQuestion();
         });
 
         navGridEl.appendChild(btn);
+      }
+
+      if (activeBtnEl) {
+        requestAnimationFrame(() => {
+          activeBtnEl.scrollIntoView({ block: "nearest", inline: "nearest" });
+        });
       }
     }
 
@@ -1541,6 +1685,12 @@
       qCounterEl.textContent = `${shownNum} / ${total}`;
       scoreCounterEl.textContent = `${score} / ${total}`;
       topProfileNameEl.textContent = profile.name;
+
+      const active = hasActiveAttempt();
+      activeStatusPillEl.classList.toggle("active-pill", active);
+      activeStatusPillEl.classList.toggle("inactive-pill", !active);
+      activeStatusLabelEl.textContent = active ? "Активна" : "Завершено";
+
       modePillEl.style.display = attemptMode === "mistakes" ? "inline-flex" : "none";
       const progressPercent = total > 0 ? (answeredCount / total) * 100 : 0;
       progressBarEl.style.width = `${progressPercent}%`;
@@ -1599,7 +1749,7 @@
     }
 
     function handleAnswer(selectedIdx) {
-      if (answersByIndex[currentIdx] || attemptSaved) return;
+      if (answersByIndex[currentIdx] || !hasActiveAttempt()) return;
       const q = attemptQuestions[currentIdx];
       const isCorrect = selectedIdx === q.correctIndex;
 
@@ -1637,7 +1787,7 @@
       if (isMistakesMode) {
         badgeEl.className = "badge-partial";
         badgeEl.textContent = "Робота над помилками";
-        summaryNoteEl.textContent = `Відпрацьовано ${answeredCount} із ${fullRunTotal} питань із банку помилок.`;
+        summaryNoteEl.textContent = `Відпрацьовано ${answeredCount} із ${fullRunTotal} питань із спільного пулу помилок.`;
       } else if (completedFullRun) {
         badgeEl.className = passed ? "badge-pass" : "badge-fail";
         badgeEl.textContent = passed ? "Складено" : "Не складено";
@@ -1646,8 +1796,8 @@
         badgeEl.className = "badge-partial";
         badgeEl.textContent = "Неповна спроба";
         summaryNoteEl.textContent = reason === "time_up"
-          ? `Час вичерпано. Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест на ${fullRunTotal} питань.`
-          : `Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест на ${fullRunTotal} питань.`;
+          ? `Час вичерпано. Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест.`
+          : `Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест.`;
       }
 
       document.getElementById("finalScore").textContent = answeredCount > 0
@@ -1673,6 +1823,7 @@
       attemptQuestions = [];
       answersByIndex = {};
       attemptMode = "full";
+      updateTopBar();
       syncProgress(true);
     }
 
@@ -1783,7 +1934,7 @@
     }
 
     nextBtnEl.addEventListener("click", () => {
-      if (!answersByIndex[currentIdx]) return;
+      if (!answersByIndex[currentIdx] || !hasActiveAttempt()) return;
       if (currentIdx + 1 >= attemptQuestions.length) {
         showSummary("completed");
         return;
@@ -1797,6 +1948,7 @@
     startNewRunBtnEl.addEventListener("click", () => startAttempt("full"));
     resultReviewMistakesBtnEl.addEventListener("click", () => startAttempt("mistakes"));
     profileReviewMistakesBtnEl.addEventListener("click", () => startAttempt("mistakes"));
+    resumeActiveSessionBtnEl.addEventListener("click", resumeActiveSessionFromProfile);
     openProfileBtnEl.addEventListener("click", openProfile);
     resultToProfileBtnEl.addEventListener("click", openProfile);
     backToQuizBtnEl.addEventListener("click", closeProfile);
@@ -1819,7 +1971,7 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         stopTimer();
-      } else if (!attemptSaved && attemptQuestions.length > 0 && attemptMode === "full" && profileCardEl.style.display === "none") {
+      } else if (hasActiveAttempt() && attemptMode === "full" && profileCardEl.style.display === "none") {
         startTimer();
       }
     });
