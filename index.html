@@ -128,10 +128,10 @@
       gap: 6px;
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 5px 12px;
+      padding: 5px 11px;
       border-radius: 999px;
       color: var(--muted);
-      font-size: 13px;
+      font-size: 12.8px;
       max-width: 100%;
       box-shadow: var(--shadow-sm);
     }
@@ -170,6 +170,17 @@
       border-color: var(--accent-border);
       color: var(--accent);
       font-weight: 600;
+    }
+
+    .stat-pill.errors-pill {
+      background: var(--bad-bg);
+      border-color: var(--bad-border);
+      color: var(--bad-text);
+      font-weight: 600;
+    }
+
+    .stat-pill.errors-pill strong {
+      color: var(--bad-text);
     }
 
     .stat-pill.timer-warn {
@@ -698,7 +709,7 @@
       }
       .stat-pill {
         padding: 5px 10px;
-        font-size: 12.5px;
+        font-size: 12px;
       }
       .card {
         padding: 18px 14px;
@@ -743,7 +754,10 @@
       <div class="topbar-metrics">
         <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
         <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
+        <div class="stat-pill">Точність: <strong id="accuracyCounter">0%</strong></div>
+        <div class="stat-pill">Відповідей: <strong id="answeredCounter">0</strong></div>
         <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
+        <div class="stat-pill errors-pill">Помилки: <strong id="errorBankCounter">0</strong></div>
         <div class="stat-pill active-pill" id="activeStatusPill">Спроба: <strong id="activeStatusLabel">Активна</strong></div>
         <div class="stat-pill mode-pill" id="modePill" style="display: none;">Робота над помилками</div>
       </div>
@@ -856,8 +870,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v10_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v10";
+    const CACHE_PREFIX = "edki_tg_state_v11_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v11";
     const THEME_PREF_STORAGE = "edki_ui_theme_v1";
 
     function normalizeHexColor(value) {
@@ -1177,8 +1191,11 @@
 
     const qCounterEl = document.getElementById("qCounter");
     const scoreCounterEl = document.getElementById("scoreCounter");
+    const accuracyCounterEl = document.getElementById("accuracyCounter");
+    const answeredCounterEl = document.getElementById("answeredCounter");
     const timerPillEl = document.getElementById("timerPill");
     const timerCounterEl = document.getElementById("timerCounter");
+    const errorBankCounterEl = document.getElementById("errorBankCounter");
     const activeStatusPillEl = document.getElementById("activeStatusPill");
     const activeStatusLabelEl = document.getElementById("activeStatusLabel");
     const modePillEl = document.getElementById("modePill");
@@ -1522,6 +1539,7 @@
 
     function renderErrorPoolBlock() {
       const count = Array.isArray(profile.errorBank) ? profile.errorBank.length : 0;
+      errorBankCounterEl.textContent = String(count);
       errorPoolDescEl.textContent = count > 0
         ? `Спільний пул помилок з усіх спроб: ${count}`
         : "Поки що немає помилок з повних або неповних спроб";
@@ -1646,6 +1664,14 @@
       const shownNum = total > 0 ? Math.min(currentIdx + 1, total) : 0;
       qCounterEl.textContent = `${shownNum} / ${total}`;
       scoreCounterEl.textContent = `${score} / ${total}`;
+      answeredCounterEl.textContent = String(answeredCount);
+
+      const accuracy = answeredCount > 0 ? Number(((score / answeredCount) * 100).toFixed(1)) : 0;
+      accuracyCounterEl.textContent = `${accuracy}%`;
+
+      const errorCount = Array.isArray(profile.errorBank) ? profile.errorBank.length : 0;
+      errorBankCounterEl.textContent = String(errorCount);
+
       topProfileNameEl.textContent = profile.name;
 
       const active = hasActiveAttempt();
