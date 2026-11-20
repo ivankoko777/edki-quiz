@@ -34,7 +34,7 @@
       --neutral-border: #c5d1e0;
       --neutral-text: #384759;
       --shadow: 0 12px 32px rgba(15, 23, 42, 0.06);
-      --shadow-sm: 0 4px 14px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 3px 10px rgba(15, 23, 42, 0.04);
     }
 
     *, *::before, *::after {
@@ -69,14 +69,14 @@
       max-width: 100%;
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 22px;
       padding: 14px 16px;
       box-shadow: var(--shadow);
       margin-bottom: 16px;
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    .topbar-row {
+    .topbar-head {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -85,13 +85,22 @@
       min-width: 0;
     }
 
-    .stats-group {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+    .brand-title {
+      display: inline-flex;
       align-items: center;
-      min-width: 0;
-      flex: 1 1 auto;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--text);
+    }
+
+    .brand-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
     }
 
     .topbar-controls {
@@ -99,6 +108,18 @@
       align-items: center;
       gap: 8px;
       flex-wrap: wrap;
+      min-width: 0;
+    }
+
+    .topbar-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--divider);
+      min-width: 0;
     }
 
     .stat-pill {
@@ -107,10 +128,10 @@
       gap: 6px;
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 6px 11px;
+      padding: 5px 12px;
       border-radius: 999px;
       color: var(--muted);
-      font-size: 13.5px;
+      font-size: 13px;
       max-width: 100%;
       box-shadow: var(--shadow-sm);
     }
@@ -191,7 +212,7 @@
       border: 1px solid var(--accent-border);
       border-radius: 999px;
       padding: 7px 14px;
-      font-size: 13.5px;
+      font-size: 13px;
       font-weight: 600;
       cursor: pointer;
       max-width: 100%;
@@ -207,16 +228,16 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 190px;
+      max-width: 185px;
     }
 
     .progress-wrap {
       width: 100%;
-      height: 7px;
+      height: 6px;
       background: var(--neutral-bg);
       border-radius: 999px;
       overflow: hidden;
-      margin-top: 13px;
+      margin-top: 12px;
     }
 
     .progress-bar {
@@ -656,12 +677,11 @@
         padding: 12px 10px 36px;
       }
       .topbar {
-        padding: 12px 13px;
+        padding: 13px 13px;
         border-radius: 18px;
       }
-      .stat-pill {
-        padding: 5px 10px;
-        font-size: 12.5px;
+      .topbar-head {
+        align-items: flex-start;
       }
       .topbar-controls {
         width: 100%;
@@ -675,6 +695,10 @@
       }
       .profile-chip span {
         max-width: 100%;
+      }
+      .stat-pill {
+        padding: 5px 10px;
+        font-size: 12.5px;
       }
       .card {
         padding: 18px 14px;
@@ -701,13 +725,10 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <div class="topbar-row">
-        <div class="stats-group">
-          <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
-          <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
-          <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
-          <div class="stat-pill active-pill" id="activeStatusPill">Спроба: <strong id="activeStatusLabel">Активна</strong></div>
-          <div class="stat-pill mode-pill" id="modePill" style="display: none;">Над помилками</div>
+      <div class="topbar-head">
+        <div class="brand-title">
+          <span class="brand-dot" aria-hidden="true"></span>
+          <span>Тестування ЄДКІ</span>
         </div>
         <div class="topbar-controls">
           <button class="theme-btn" id="themeToggleBtn" type="button" aria-label="Перемикач теми">
@@ -718,6 +739,15 @@
           </button>
         </div>
       </div>
+
+      <div class="topbar-metrics">
+        <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
+        <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
+        <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
+        <div class="stat-pill active-pill" id="activeStatusPill">Спроба: <strong id="activeStatusLabel">Активна</strong></div>
+        <div class="stat-pill mode-pill" id="modePill" style="display: none;">Робота над помилками</div>
+      </div>
+
       <div class="progress-wrap">
         <div class="progress-bar" id="progressBar"></div>
       </div>
@@ -783,7 +813,7 @@
       <div class="active-session-banner idle" id="profileActiveSessionBanner">
         <div class="active-session-text">
           <strong id="profileActiveTitle">Активна спроба відсутня</strong>
-          <span id="profileActiveDesc">Можна розпочати нову спробу або тренування над помилками</span>
+          <span id="profileActiveDesc">Можна розпочати нову спробу або роботу над помилками</span>
         </div>
         <button class="primary" id="resumeActiveSessionBtn" type="button" style="display: none;">Продовжити спробу</button>
       </div>
@@ -826,8 +856,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v9_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v9";
+    const CACHE_PREFIX = "edki_tg_state_v10_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v10";
     const THEME_PREF_STORAGE = "edki_ui_theme_v1";
 
     function normalizeHexColor(value) {
@@ -894,7 +924,7 @@
       } catch {}
     }
 
-    let currentThemeMode = getSavedThemePreference(); // "light" | "dark" | null
+    let currentThemeMode = getSavedThemePreference();
 
     function resolveEffectiveDarkMode() {
       if (currentThemeMode === "dark") return true;
@@ -1509,7 +1539,7 @@
       } else {
         profileActiveSessionBannerEl.classList.add("idle");
         profileActiveTitleEl.textContent = "Активна спроба відсутня";
-        profileActiveDescEl.textContent = "Поточну спробу завершено — можна почати нову або тренування";
+        profileActiveDescEl.textContent = "Поточну спробу завершено — можна почати нову або роботу над помилками";
         resumeActiveSessionBtnEl.style.display = "none";
       }
     }
@@ -1549,7 +1579,7 @@
           ? ` · помилок: ${entry.mistakes.length}`
           : "";
         const modeLabel = entry.mode === "mistakes"
-          ? `Над помилками (${entry.answeredCount} питань)`
+          ? `Робота над помилками (${entry.answeredCount} питань)`
           : (entry.fullRun ? "Повна спроба" : `Неповна спроба (${entry.answeredCount} питань)`);
         left.innerHTML = `
           <div class="history-score">${entry.score} / ${entry.denominator} (${entry.percentage}%)</div>
@@ -1559,7 +1589,7 @@
         const badge = document.createElement("span");
         if (entry.mode === "mistakes") {
           badge.className = "badge-partial";
-          badge.textContent = "Над помилками";
+          badge.textContent = "Робота над помилками";
         } else if (entry.fullRun) {
           badge.className = entry.passed ? "badge-pass" : "badge-fail";
           badge.textContent = entry.passed ? "Складено" : "Не складено";
