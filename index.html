@@ -8,7 +8,10 @@
   <style>
     :root {
       --bg: #e9eff7;
-      --bg-grad: linear-gradient(180deg, #f5f9ff 0%, #e7eef8 55%, #dfe8f5 100%);
+      --bg-top: #f5f9ff;
+      --bg-mid: #e7eef8;
+      --bg-bot: #dfe8f5;
+      --bg-grad: linear-gradient(180deg, var(--bg-top) 0%, var(--bg-mid) 55%, var(--bg-bot) 100%);
       --card: #ffffff;
       --surface: #f5f8fc;
       --surface-hover: #edf4ff;
@@ -16,8 +19,11 @@
       --muted: #5b6b7e;
       --accent: #1665d8;
       --accent-hover: #114fb0;
+      --accent-text: #ffffff;
       --accent-soft: #e8f1ff;
+      --accent-border: #c7dcff;
       --border: #dce4ef;
+      --divider: #edf2f7;
       --ok-bg: #e7f7ed;
       --ok-border: #229648;
       --ok-text: #135e2b;
@@ -47,6 +53,7 @@
       color: var(--text);
       line-height: 1.55;
       -webkit-tap-highlight-color: transparent;
+      transition: background 0.25s ease, color 0.2s ease;
     }
 
     .container {
@@ -66,6 +73,7 @@
       padding: 14px 16px;
       box-shadow: var(--shadow);
       margin-bottom: 16px;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .topbar-row {
@@ -109,14 +117,14 @@
 
     .stat-pill.mode-pill {
       background: var(--accent-soft);
-      border-color: #c7dcff;
+      border-color: var(--accent-border);
       color: var(--accent);
       font-weight: 600;
     }
 
     .stat-pill.timer-warn {
       background: var(--bad-bg);
-      border-color: #f3c5c1;
+      border-color: var(--bad-border);
       color: var(--bad-text);
     }
 
@@ -130,7 +138,7 @@
       gap: 7px;
       background: var(--accent-soft);
       color: var(--accent);
-      border: 1px solid #c7dcff;
+      border: 1px solid var(--accent-border);
       border-radius: 999px;
       padding: 7px 14px;
       font-size: 13.5px;
@@ -141,8 +149,8 @@
     }
 
     .profile-chip:hover {
-      background: #dbe9ff;
-      border-color: #a9c9ff;
+      background: var(--surface-hover);
+      border-color: var(--accent);
     }
 
     .profile-chip span {
@@ -155,7 +163,7 @@
     .progress-wrap {
       width: 100%;
       height: 7px;
-      background: #e6edf5;
+      background: var(--neutral-bg);
       border-radius: 999px;
       overflow: hidden;
       margin-top: 13px;
@@ -164,7 +172,7 @@
     .progress-bar {
       height: 100%;
       width: 0%;
-      background: linear-gradient(90deg, var(--accent), #3b82f6);
+      background: linear-gradient(90deg, var(--accent), var(--accent-hover));
       border-radius: 999px;
       transition: width 0.25s ease;
     }
@@ -180,6 +188,7 @@
       box-shadow: var(--shadow);
       overflow-wrap: anywhere;
       word-break: break-word;
+      transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
     .nav-panel {
@@ -252,12 +261,12 @@
     }
 
     .nav-num-btn.answered-ok.active {
-      background: #d5f2df;
+      filter: brightness(0.97);
       color: var(--ok-text);
     }
 
     .nav-num-btn.answered-bad.active {
-      background: #fcdadb;
+      filter: brightness(0.97);
       color: var(--bad-text);
     }
 
@@ -351,19 +360,19 @@
       gap: 10px;
       margin-top: 22px;
       padding-top: 18px;
-      border-top: 1px solid #edf2f7;
+      border-top: 1px solid var(--divider);
     }
 
     button.primary {
       background: var(--accent);
-      color: #ffffff;
+      color: var(--accent-text);
       border: none;
       border-radius: 13px;
       padding: 12px 20px;
       font-size: 15px;
       font-weight: 600;
       cursor: pointer;
-      box-shadow: 0 6px 16px rgba(22, 101, 216, 0.22);
+      box-shadow: 0 6px 16px rgba(22, 101, 216, 0.2);
       transition: background-color 0.15s ease, transform 0.1s ease;
     }
 
@@ -391,8 +400,8 @@
 
     button.secondary:hover:not(:disabled) {
       color: var(--text);
-      border-color: #c5d1e0;
-      background: #edf2f8;
+      border-color: var(--accent);
+      background: var(--surface-hover);
     }
 
     button.secondary:disabled {
@@ -403,7 +412,7 @@
     button.danger {
       background: var(--bad-bg);
       color: var(--bad-text);
-      border: 1px solid #f3c5c1;
+      border: 1px solid var(--bad-border);
       border-radius: 13px;
       padding: 10px 16px;
       font-size: 14px;
@@ -412,7 +421,7 @@
     }
 
     button.danger:hover {
-      background: #fcd9dc;
+      filter: brightness(0.97);
     }
 
     .badge-pass, .badge-fail, .badge-partial {
@@ -497,7 +506,7 @@
     .mistakes-section {
       margin-top: 22px;
       padding-top: 18px;
-      border-top: 1px solid #edf2f7;
+      border-top: 1px solid var(--divider);
       min-width: 0;
     }
 
@@ -520,7 +529,7 @@
       font-weight: 600;
       color: var(--bad-text);
       background: var(--bad-bg);
-      border: 1px solid #f3c5c1;
+      border: 1px solid var(--bad-border);
       padding: 4px 11px;
       border-radius: 999px;
     }
@@ -560,13 +569,13 @@
 
     .mistake-ans.user-choice {
       background: var(--bad-bg);
-      border: 1px solid #f3c5c1;
+      border: 1px solid var(--bad-border);
       color: var(--bad-text);
     }
 
     .mistake-ans.right-choice {
       background: var(--ok-bg);
-      border: 1px solid #bce6ca;
+      border: 1px solid var(--ok-border);
       color: var(--ok-text);
     }
 
@@ -591,7 +600,7 @@
 
     .profile-input:focus {
       border-color: var(--accent);
-      background: #ffffff;
+      background: var(--card);
     }
 
     .sync-note {
@@ -807,12 +816,156 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v5_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v5";
+    const CACHE_PREFIX = "edki_tg_state_v6_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v6";
+
+    function normalizeHexColor(value) {
+      if (!value || typeof value !== "string") return null;
+      const cleaned = value.trim();
+      const match = cleaned.match(/^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/);
+      if (!match) return null;
+      let hex = match[1];
+      if (hex.length === 3) {
+        hex = hex.split("").map((ch) => ch + ch).join("");
+      }
+      return `#${hex.toLowerCase()}`;
+    }
+
+    function hexToRgb(hex) {
+      const norm = normalizeHexColor(hex);
+      if (!norm) return null;
+      const num = parseInt(norm.slice(1), 16);
+      return {
+        r: (num >> 16) & 255,
+        g: (num >> 8) & 255,
+        b: num & 255,
+      };
+    }
+
+    function rgbToHex(r, g, b) {
+      const clamp = (n) => Math.max(0, Math.min(255, Math.round(n)));
+      return `#${[clamp(r), clamp(g), clamp(b)]
+        .map((v) => v.toString(16).padStart(2, "0"))
+        .join("")}`;
+    }
+
+    function mixHex(hexA, hexB, weightA = 0.5) {
+      const a = hexToRgb(hexA);
+      const b = hexToRgb(hexB);
+      if (!a || !b) return hexA || hexB || "#ffffff";
+      const w = Math.max(0, Math.min(1, weightA));
+      return rgbToHex(
+        a.r * w + b.r * (1 - w),
+        a.g * w + b.g * (1 - w),
+        a.b * w + b.b * (1 - w)
+      );
+    }
+
+    function isDarkHex(hex) {
+      const rgb = hexToRgb(hex);
+      if (!rgb) return false;
+      const luminance = (0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b) / 255;
+      return luminance < 0.45;
+    }
+
+    function applyTelegramTheme() {
+      const root = document.documentElement;
+      const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+      const tp = tg && tg.themeParams ? tg.themeParams : {};
+
+      const tgBg = normalizeHexColor(tp.bg_color);
+      const tgSecBg = normalizeHexColor(tp.secondary_bg_color);
+      const tgText = normalizeHexColor(tp.text_color);
+      const tgHint = normalizeHexColor(tp.hint_color);
+      const tgBtn = normalizeHexColor(tp.button_color);
+      const tgBtnText = normalizeHexColor(tp.button_text_color);
+
+      if (!tgBg && !tgSecBg && !tgText && !tgBtn) {
+        return;
+      }
+
+      const darkScheme = tg && tg.colorScheme === "dark"
+        ? true
+        : (tgBg ? isDarkHex(tgBg) : false);
+
+      const baseBg = tgBg || (darkScheme ? "#151c26" : "#e9eff7");
+      const cardColor = tgSecBg || (darkScheme ? "#1e2734" : "#ffffff");
+      const textColor = tgText || (darkScheme ? "#f1f5f9" : "#0f172a");
+      const mutedColor = tgHint || (darkScheme ? "#94a3b8" : "#5b6b7e");
+      const accentColor = tgBtn || (darkScheme ? "#3b82f6" : "#1665d8");
+      const accentTextColor = tgBtnText || "#ffffff";
+
+      const bgTop = darkScheme ? mixHex(baseBg, "#263244", 0.75) : mixHex(baseBg, "#ffffff", 0.72);
+      const bgMid = baseBg;
+      const bgBot = darkScheme ? mixHex(baseBg, "#0d1218", 0.78) : mixHex(baseBg, "#cfdaea", 0.75);
+
+      const surfaceColor = darkScheme ? mixHex(cardColor, baseBg, 0.55) : mixHex(cardColor, "#eef3f9", 0.52);
+      const surfaceHover = darkScheme ? mixHex(cardColor, accentColor, 0.82) : mixHex(surfaceColor, accentColor, 0.88);
+      const borderColor = darkScheme ? mixHex(cardColor, "#ffffff", 0.84) : mixHex(surfaceColor, "#c7d3e3", 0.65);
+      const dividerColor = darkScheme ? mixHex(cardColor, "#ffffff", 0.88) : mixHex(surfaceColor, "#dce4ef", 0.65);
+      const accentSoft = darkScheme ? mixHex(cardColor, accentColor, 0.74) : mixHex(cardColor, accentColor, 0.9);
+      const accentBorder = darkScheme ? mixHex(cardColor, accentColor, 0.55) : mixHex(cardColor, accentColor, 0.74);
+      const accentHover = darkScheme ? mixHex(accentColor, "#ffffff", 0.84) : mixHex(accentColor, "#0f172a", 0.82);
+
+      const okBase = darkScheme ? "#22c55e" : "#229648";
+      const badBase = darkScheme ? "#ef4444" : "#d63628";
+      const okBg = darkScheme ? mixHex(cardColor, okBase, 0.78) : "#e7f7ed";
+      const okText = darkScheme ? "#86efac" : "#135e2b";
+      const badBg = darkScheme ? mixHex(cardColor, badBase, 0.78) : "#feeced";
+      const badText = darkScheme ? "#fca5a5" : "#991b11";
+      const neutralBg = darkScheme ? mixHex(cardColor, "#94a3b8", 0.78) : "#eef2f7";
+      const neutralBorder = darkScheme ? mixHex(cardColor, "#cbd5e1", 0.72) : "#c5d1e0";
+      const neutralText = darkScheme ? "#e2e8f0" : "#384759";
+
+      const vars = {
+        "--bg": baseBg,
+        "--bg-top": bgTop,
+        "--bg-mid": bgMid,
+        "--bg-bot": bgBot,
+        "--card": cardColor,
+        "--surface": surfaceColor,
+        "--surface-hover": surfaceHover,
+        "--text": textColor,
+        "--muted": mutedColor,
+        "--accent": accentColor,
+        "--accent-hover": accentHover,
+        "--accent-text": accentTextColor,
+        "--accent-soft": accentSoft,
+        "--accent-border": accentBorder,
+        "--border": borderColor,
+        "--divider": dividerColor,
+        "--ok-bg": okBg,
+        "--ok-border": okBase,
+        "--ok-text": okText,
+        "--bad-bg": badBg,
+        "--bad-border": badBase,
+        "--bad-text": badText,
+        "--neutral-bg": neutralBg,
+        "--neutral-border": neutralBorder,
+        "--neutral-text": neutralText,
+      };
+
+      Object.entries(vars).forEach(([prop, val]) => {
+        root.style.setProperty(prop, val);
+      });
+
+      try {
+        if (typeof tg.setBackgroundColor === "function") {
+          tg.setBackgroundColor(baseBg);
+        }
+        if (typeof tg.setHeaderColor === "function") {
+          tg.setHeaderColor(cardColor);
+        }
+      } catch {}
+    }
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
       window.Telegram.WebApp.expand();
+      applyTelegramTheme();
+      if (typeof window.Telegram.WebApp.onEvent === "function") {
+        window.Telegram.WebApp.onEvent("themeChanged", applyTelegramTheme);
+      }
     }
 
     function getTelegramUser() {
@@ -920,7 +1073,7 @@
     let currentIdx = 0;
     let score = 0;
     let answeredCount = 0;
-    let attemptMode = "full"; // "full" | "mistakes"
+    let attemptMode = "full";
     let remainingMs = DURATION_MS;
     let lastTickMs = null;
     let timerInterval = null;
@@ -1676,6 +1829,7 @@
 
     async function init() {
       try {
+        applyTelegramTheme();
         const allQuestions = await fetchQuestions();
         pool = new QuestionPool(allQuestions, []);
         await loadProfileIntoApp(profileKey);
