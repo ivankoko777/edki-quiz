@@ -76,11 +76,10 @@
       transition: background-color 0.2s ease, border-color 0.2s ease;
     }
 
-    .topbar-head {
+    .topbar-row-1 {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
       gap: 10px;
       min-width: 0;
     }
@@ -89,10 +88,12 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      font-size: 14px;
+      font-size: 14.5px;
       font-weight: 700;
       letter-spacing: 0.01em;
       color: var(--text);
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .brand-dot {
@@ -101,108 +102,81 @@
       border-radius: 50%;
       background: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-soft);
+      flex-shrink: 0;
     }
 
     .topbar-controls {
       display: flex;
       align-items: center;
       gap: 8px;
-      flex-wrap: wrap;
       min-width: 0;
+      flex-shrink: 0;
     }
 
-    .topbar-metrics {
-      display: flex;
-      flex-wrap: wrap;
+    .topbar-row-2 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 8px;
-      align-items: center;
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid var(--divider);
-      min-width: 0;
     }
 
-    .stat-pill {
-      display: inline-flex;
+    .stat-cell {
+      display: flex;
+      flex-direction: column;
       align-items: center;
-      gap: 6px;
+      justify-content: center;
       background: var(--surface);
       border: 1px solid var(--border);
-      padding: 5px 11px;
-      border-radius: 999px;
-      color: var(--muted);
-      font-size: 12.8px;
-      max-width: 100%;
+      padding: 7px 10px;
+      border-radius: 14px;
+      min-width: 0;
       box-shadow: var(--shadow-sm);
+      text-align: center;
     }
 
-    .stat-pill strong {
-      color: var(--text);
+    .stat-cell span {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.25;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 100%;
+    }
+
+    .stat-cell strong {
+      font-size: 14px;
       font-weight: 700;
+      color: var(--text);
       font-variant-numeric: tabular-nums;
       white-space: nowrap;
+      line-height: 1.3;
+      margin-top: 1px;
     }
 
-    .stat-pill.active-pill {
-      background: var(--ok-bg);
-      border-color: var(--ok-border);
-      color: var(--ok-text);
-      font-weight: 600;
-    }
-
-    .stat-pill.active-pill strong {
-      color: var(--ok-text);
-    }
-
-    .stat-pill.inactive-pill {
-      background: var(--neutral-bg);
-      border-color: var(--neutral-border);
-      color: var(--neutral-text);
-      font-weight: 600;
-    }
-
-    .stat-pill.inactive-pill strong {
-      color: var(--neutral-text);
-    }
-
-    .stat-pill.mode-pill {
-      background: var(--accent-soft);
-      border-color: var(--accent-border);
-      color: var(--accent);
-      font-weight: 600;
-    }
-
-    .stat-pill.errors-pill {
+    .stat-cell.timer-warn {
       background: var(--bad-bg);
       border-color: var(--bad-border);
-      color: var(--bad-text);
-      font-weight: 600;
     }
 
-    .stat-pill.errors-pill strong {
-      color: var(--bad-text);
-    }
-
-    .stat-pill.timer-warn {
-      background: var(--bad-bg);
-      border-color: var(--bad-border);
-      color: var(--bad-text);
-    }
-
-    .stat-pill.timer-warn strong {
+    .stat-cell.timer-warn span,
+    .stat-cell.timer-warn strong {
       color: var(--bad-text);
     }
 
     .theme-btn {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 6px;
       background: var(--surface);
       color: var(--text);
       border: 1px solid var(--border);
       border-radius: 999px;
       padding: 7px 13px;
-      font-size: 13px;
+      font-size: 12.8px;
       font-weight: 600;
       cursor: pointer;
       white-space: nowrap;
@@ -217,16 +191,18 @@
     .profile-chip {
       display: inline-flex;
       align-items: center;
-      gap: 7px;
+      justify-content: center;
+      gap: 6px;
       background: var(--accent-soft);
       color: var(--accent);
       border: 1px solid var(--accent-border);
       border-radius: 999px;
-      padding: 7px 14px;
-      font-size: 13px;
+      padding: 7px 13px;
+      font-size: 12.8px;
       font-weight: 600;
       cursor: pointer;
-      max-width: 100%;
+      max-width: 210px;
+      min-width: 0;
       transition: background-color 0.15s ease, border-color 0.15s ease;
     }
 
@@ -239,7 +215,6 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 185px;
     }
 
     .progress-wrap {
@@ -683,33 +658,41 @@
       text-align: center;
     }
 
-    @media (max-width: 560px) {
+    @media (max-width: 600px) {
       .container {
         padding: 12px 10px 36px;
       }
       .topbar {
-        padding: 13px 13px;
+        padding: 12px;
         border-radius: 18px;
       }
-      .topbar-head {
-        align-items: flex-start;
+      .topbar-row-1 {
+        flex-wrap: wrap;
       }
       .topbar-controls {
         width: 100%;
       }
       .theme-btn {
         flex: 0 0 auto;
+        padding: 6px 11px;
+        font-size: 12px;
       }
       .profile-chip {
         flex: 1 1 auto;
-        justify-content: center;
-      }
-      .profile-chip span {
-        max-width: 100%;
-      }
-      .stat-pill {
-        padding: 5px 10px;
+        max-width: none;
+        padding: 6px 12px;
         font-size: 12px;
+      }
+      .topbar-row-2 {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 7px;
+      }
+      .stat-cell {
+        padding: 6px 8px;
+        border-radius: 12px;
+      }
+      .stat-cell strong {
+        font-size: 13px;
       }
       .card {
         padding: 18px 14px;
@@ -736,7 +719,7 @@
 <body>
   <div class="container">
     <div class="topbar">
-      <div class="topbar-head">
+      <div class="topbar-row-1">
         <div class="brand-title">
           <span class="brand-dot" aria-hidden="true"></span>
           <span>Тестування ЄДКІ</span>
@@ -751,15 +734,23 @@
         </div>
       </div>
 
-      <div class="topbar-metrics">
-        <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
-        <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
-        <div class="stat-pill">Точність: <strong id="accuracyCounter">0%</strong></div>
-        <div class="stat-pill">Відповідей: <strong id="answeredCounter">0</strong></div>
-        <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
-        <div class="stat-pill errors-pill">Помилки: <strong id="errorBankCounter">0</strong></div>
-        <div class="stat-pill active-pill" id="activeStatusPill">Спроба: <strong id="activeStatusLabel">Активна</strong></div>
-        <div class="stat-pill mode-pill" id="modePill" style="display: none;">Робота над помилками</div>
+      <div class="topbar-row-2">
+        <div class="stat-cell">
+          <span>Питання</span>
+          <strong id="qCounter">0 / 0</strong>
+        </div>
+        <div class="stat-cell">
+          <span>Бали</span>
+          <strong id="scoreCounter">0 / 0</strong>
+        </div>
+        <div class="stat-cell" id="timerPill">
+          <span>Час</span>
+          <strong id="timerCounter">02:30:00</strong>
+        </div>
+        <div class="stat-cell">
+          <span>Точність</span>
+          <strong id="accuracyCounter">0%</strong>
+        </div>
       </div>
 
       <div class="progress-wrap">
@@ -870,8 +861,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v11_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v11";
+    const CACHE_PREFIX = "edki_tg_state_v12_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v12";
     const THEME_PREF_STORAGE = "edki_ui_theme_v1";
 
     function normalizeHexColor(value) {
@@ -1192,13 +1183,8 @@
     const qCounterEl = document.getElementById("qCounter");
     const scoreCounterEl = document.getElementById("scoreCounter");
     const accuracyCounterEl = document.getElementById("accuracyCounter");
-    const answeredCounterEl = document.getElementById("answeredCounter");
     const timerPillEl = document.getElementById("timerPill");
     const timerCounterEl = document.getElementById("timerCounter");
-    const errorBankCounterEl = document.getElementById("errorBankCounter");
-    const activeStatusPillEl = document.getElementById("activeStatusPill");
-    const activeStatusLabelEl = document.getElementById("activeStatusLabel");
-    const modePillEl = document.getElementById("modePill");
     const progressBarEl = document.getElementById("progressBar");
     const themeToggleBtnEl = document.getElementById("themeToggleBtn");
     const questionTextEl = document.getElementById("questionText");
@@ -1539,7 +1525,6 @@
 
     function renderErrorPoolBlock() {
       const count = Array.isArray(profile.errorBank) ? profile.errorBank.length : 0;
-      errorBankCounterEl.textContent = String(count);
       errorPoolDescEl.textContent = count > 0
         ? `Спільний пул помилок з усіх спроб: ${count}`
         : "Поки що немає помилок з повних або неповних спроб";
@@ -1664,22 +1649,12 @@
       const shownNum = total > 0 ? Math.min(currentIdx + 1, total) : 0;
       qCounterEl.textContent = `${shownNum} / ${total}`;
       scoreCounterEl.textContent = `${score} / ${total}`;
-      answeredCounterEl.textContent = String(answeredCount);
 
       const accuracy = answeredCount > 0 ? Number(((score / answeredCount) * 100).toFixed(1)) : 0;
       accuracyCounterEl.textContent = `${accuracy}%`;
 
-      const errorCount = Array.isArray(profile.errorBank) ? profile.errorBank.length : 0;
-      errorBankCounterEl.textContent = String(errorCount);
-
       topProfileNameEl.textContent = profile.name;
 
-      const active = hasActiveAttempt();
-      activeStatusPillEl.classList.toggle("active-pill", active);
-      activeStatusPillEl.classList.toggle("inactive-pill", !active);
-      activeStatusLabelEl.textContent = active ? "Активна" : "Завершено";
-
-      modePillEl.style.display = attemptMode === "mistakes" ? "inline-flex" : "none";
       const progressPercent = total > 0 ? (answeredCount / total) * 100 : 0;
       progressBarEl.style.width = `${progressPercent}%`;
     }
