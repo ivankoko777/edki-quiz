@@ -107,6 +107,13 @@
       white-space: nowrap;
     }
 
+    .stat-pill.mode-pill {
+      background: var(--accent-soft);
+      border-color: #c7dcff;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
     .stat-pill.timer-warn {
       background: var(--bad-bg);
       border-color: #f3c5c1;
@@ -382,10 +389,15 @@
       transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
     }
 
-    button.secondary:hover {
+    button.secondary:hover:not(:disabled) {
       color: var(--text);
       border-color: #c5d1e0;
       background: #edf2f8;
+    }
+
+    button.secondary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
     }
 
     button.danger {
@@ -455,6 +467,31 @@
       font-size: 22px;
       color: var(--text);
       overflow-wrap: anywhere;
+    }
+
+    .review-banner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      margin: 16px 0;
+      min-width: 0;
+    }
+
+    .review-banner-text strong {
+      display: block;
+      font-size: 15px;
+      color: var(--text);
+    }
+
+    .review-banner-text span {
+      font-size: 13px;
+      color: var(--muted);
     }
 
     .mistakes-section {
@@ -656,6 +693,7 @@
           <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
           <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
           <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
+          <div class="stat-pill mode-pill" id="modePill" style="display: none;">Над помилками</div>
         </div>
         <button class="profile-chip" id="openProfileBtn" type="button">
           <span>Профіль: <strong id="topProfileName">Студент</strong></span>
@@ -710,6 +748,7 @@
 
       <div class="actions" style="border-top: none; padding-top: 16px; margin-top: 14px; justify-content: flex-start;">
         <button class="primary" id="startNewRunBtn" type="button">Нова спроба</button>
+        <button class="secondary" id="resultReviewMistakesBtn" type="button" style="display: none;">Робота над помилками</button>
         <button class="secondary" id="resultToProfileBtn" type="button">Відкрити профіль</button>
       </div>
     </div>
@@ -729,6 +768,14 @@
         <button class="primary" type="submit">Зберегти ім'я</button>
       </form>
       <div class="sync-note" id="syncStatusText">Стан: підключення...</div>
+
+      <div class="review-banner">
+        <div class="review-banner-text">
+          <strong>Робота над помилками</strong>
+          <span id="errorPoolDesc">Питань для повторення: 0</span>
+        </div>
+        <button class="secondary" id="profileReviewMistakesBtn" type="button" disabled>Почати тренування</button>
+      </div>
 
       <div class="summary-grid">
         <div class="summary-box">
@@ -760,8 +807,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v4_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v4";
+    const CACHE_PREFIX = "edki_tg_state_v5_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v5";
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
@@ -800,6 +847,13 @@
         [copy[i], copy[j]] = [copy[j], copy[i]];
       }
       return copy;
+    }
+
+    function makeQuestionSignature(q) {
+      if (q && q.id !== undefined && q.id !== null && String(q.id).trim() !== "") {
+        return `id:${String(q.id).trim()}`;
+      }
+      return `txt:${String(q && q.question ? q.question : "").trim().toLowerCase()}`;
     }
 
     function normalizeQuestion(question) {
@@ -858,6 +912,7 @@
     let profile = {
       name: tgUserInit ? detectTelegramName() : "Студент",
       history: [],
+      errorBank: [],
     };
     let pool = null;
     let attemptQuestions = [];
@@ -865,6 +920,7 @@
     let currentIdx = 0;
     let score = 0;
     let answeredCount = 0;
+    let attemptMode = "full"; // "full" | "mistakes"
     let remainingMs = DURATION_MS;
     let lastTickMs = null;
     let timerInterval = null;
@@ -876,6 +932,7 @@
     const scoreCounterEl = document.getElementById("scoreCounter");
     const timerPillEl = document.getElementById("timerPill");
     const timerCounterEl = document.getElementById("timerCounter");
+    const modePillEl = document.getElementById("modePill");
     const progressBarEl = document.getElementById("progressBar");
     const navGridEl = document.getElementById("navGrid");
     const navAnsweredSummaryEl = document.getElementById("navAnsweredSummary");
@@ -885,6 +942,7 @@
     const nextBtnEl = document.getElementById("nextBtn");
     const finishEarlyBtnEl = document.getElementById("finishEarlyBtn");
     const startNewRunBtnEl = document.getElementById("startNewRunBtn");
+    const resultReviewMistakesBtnEl = document.getElementById("resultReviewMistakesBtn");
     const quizCardEl = document.getElementById("quizCard");
     const resultCardEl = document.getElementById("resultCard");
     const profileCardEl = document.getElementById("profileCard");
@@ -897,8 +955,75 @@
     const backToQuizBtnEl = document.getElementById("backToQuizBtn");
     const profileFormEl = document.getElementById("profileForm");
     const profileNameInputEl = document.getElementById("profileNameInput");
+    const errorPoolDescEl = document.getElementById("errorPoolDesc");
+    const profileReviewMistakesBtnEl = document.getElementById("profileReviewMistakesBtn");
     const clearHistoryBtnEl = document.getElementById("clearHistoryBtn");
     const syncStatusTextEl = document.getElementById("syncStatusText");
+
+    function buildErrorBankFromData(historyList, savedErrorBank) {
+      const bankMap = new Map();
+
+      const addQuestionToBank = (qObj) => {
+        if (!qObj || !qObj.question || !Array.isArray(qObj.options) || qObj.options.length === 0) return;
+        const sig = makeQuestionSignature(qObj);
+        if (!bankMap.has(sig)) {
+          bankMap.set(sig, {
+            id: qObj.id ?? null,
+            question: String(qObj.question).trim(),
+            options: [...qObj.options],
+            correctIndex: Number.isInteger(qObj.correctIndex) ? qObj.correctIndex : 0,
+          });
+        }
+      };
+
+      if (Array.isArray(historyList)) {
+        historyList.forEach((entry) => {
+          if (entry && Array.isArray(entry.mistakes)) {
+            entry.mistakes.forEach((m) => {
+              if (m && Array.isArray(m.options) && m.options.length > 0) {
+                addQuestionToBank(m);
+              } else if (m && m.question && m.correctAnswer) {
+                const matched = pool && Array.isArray(pool.allQuestions)
+                  ? pool.allQuestions.find((fullQ) =>
+                      (m.id !== undefined && m.id !== null && String(fullQ.id) === String(m.id)) ||
+                      String(fullQ.question || "").trim() === String(m.question || "").trim()
+                    )
+                  : null;
+                if (matched) {
+                  addQuestionToBank(matched);
+                }
+              }
+            });
+          }
+        });
+      }
+
+      if (Array.isArray(savedErrorBank)) {
+        savedErrorBank.forEach((item) => addQuestionToBank(item));
+      }
+
+      return Array.from(bankMap.values());
+    }
+
+    function syncErrorBankWithAnswer(questionObj, isCorrect) {
+      const sig = makeQuestionSignature(questionObj);
+      if (isCorrect) {
+        profile.errorBank = (profile.errorBank || []).filter((item) => makeQuestionSignature(item) !== sig);
+      } else {
+        const exists = (profile.errorBank || []).some((item) => makeQuestionSignature(item) === sig);
+        if (!exists) {
+          profile.errorBank = [
+            ...(profile.errorBank || []),
+            {
+              id: questionObj.id ?? null,
+              question: questionObj.question,
+              options: [...questionObj.options],
+              correctIndex: questionObj.correctIndex,
+            },
+          ];
+        }
+      }
+    }
 
     function recalculateScoreFromAnswers() {
       let correctTotal = 0;
@@ -921,9 +1046,11 @@
         const userAnswer = q.options[ans.selectedIdx] ?? "Не вибрано";
         const correctAnswer = q.options[q.correctIndex] ?? "";
         items.push({
-          id: q.id,
+          id: q.id ?? null,
           questionNumber: idx + 1,
           question: q.question,
+          options: [...q.options],
+          correctIndex: q.correctIndex,
           userAnswer,
           correctAnswer,
         });
@@ -974,6 +1101,7 @@
         currentIdx,
         score,
         answeredCount,
+        attemptMode,
         remainingMs: Math.max(0, Math.round(remainingMs)),
       };
     }
@@ -982,6 +1110,7 @@
       return {
         name: profile.name,
         history: profile.history,
+        errorBank: profile.errorBank || [],
         usedIds: pool ? pool.usedIds : [],
         activeSession: buildSessionSnapshot(),
       };
@@ -1061,7 +1190,7 @@
       } catch {
         const cached = loadLocal(key);
         syncStatusTextEl.textContent = "Локальний режим";
-        return cached || { name: detectTelegramName(), history: [], usedIds: [], activeSession: null };
+        return cached || { name: detectTelegramName(), history: [], errorBank: [], usedIds: [], activeSession: null };
       }
     }
 
@@ -1076,7 +1205,7 @@
 
     function renderTimer() {
       timerCounterEl.textContent = formatRemainingTime(remainingMs);
-      if (remainingMs <= 10 * 60 * 1000) {
+      if (attemptMode === "full" && remainingMs <= 10 * 60 * 1000) {
         timerPillEl.classList.add("timer-warn");
       } else {
         timerPillEl.classList.remove("timer-warn");
@@ -1094,7 +1223,7 @@
       renderTimer();
       saveLocal(profileKey, buildStateSnapshot());
 
-      if (remainingMs <= 0) {
+      if (attemptMode === "full" && remainingMs <= 0) {
         stopTimer();
         showSummary("time_up");
       }
@@ -1135,9 +1264,18 @@
       }
     }
 
+    function renderErrorPoolBlock() {
+      const count = Array.isArray(profile.errorBank) ? profile.errorBank.length : 0;
+      errorPoolDescEl.textContent = count > 0
+        ? `Питань для повторення: ${count}`
+        : "Поки що немає помилок із попередніх спроб";
+      profileReviewMistakesBtnEl.disabled = count === 0;
+    }
+
     function renderProfileView() {
       topProfileNameEl.textContent = profile.name;
       profileNameInputEl.value = profile.name;
+      renderErrorPoolBlock();
 
       const totalAttempts = profile.history.length;
       const bestPercent = totalAttempts > 0
@@ -1167,14 +1305,19 @@
         const mistakesPart = Array.isArray(entry.mistakes) && entry.mistakes.length > 0
           ? ` · помилок: ${entry.mistakes.length}`
           : "";
-        const modeLabel = entry.fullRun ? "Повна спроба (150)" : `Неповна спроба (${entry.answeredCount} питань)`;
+        const modeLabel = entry.mode === "mistakes"
+          ? `Над помилками (${entry.answeredCount} питань)`
+          : (entry.fullRun ? "Повна спроба (150)" : `Неповна спроба (${entry.answeredCount} питань)`);
         left.innerHTML = `
           <div class="history-score">${entry.score} / ${entry.denominator} (${entry.percentage}%)</div>
           <div class="history-meta">${modeLabel}${mistakesPart} · ${formatDate(entry.date)}</div>
         `;
 
         const badge = document.createElement("span");
-        if (entry.fullRun) {
+        if (entry.mode === "mistakes") {
+          badge.className = "badge-partial";
+          badge.textContent = "Тренування";
+        } else if (entry.fullRun) {
           badge.className = entry.passed ? "badge-pass" : "badge-fail";
           badge.textContent = entry.passed ? "Складено" : "Не складено";
         } else {
@@ -1245,6 +1388,7 @@
       qCounterEl.textContent = `${shownNum} / ${total}`;
       scoreCounterEl.textContent = `${score} / ${total}`;
       topProfileNameEl.textContent = profile.name;
+      modePillEl.style.display = attemptMode === "mistakes" ? "inline-flex" : "none";
       const progressPercent = total > 0 ? (answeredCount / total) * 100 : 0;
       progressBarEl.style.width = `${progressPercent}%`;
       renderQuestionNav();
@@ -1308,6 +1452,7 @@
 
       answersByIndex[currentIdx] = { selectedIdx, isCorrect };
       recalculateScoreFromAnswers();
+      syncErrorBankWithAnswer(q, isCorrect);
 
       applyFeedbackState(q, answersByIndex[currentIdx]);
       updateTopBar();
@@ -1324,15 +1469,23 @@
       const mistakes = collectMistakes(attemptQuestions, answersByIndex);
       renderMistakesReview(mistakes);
 
+      const hasSavedErrors = Array.isArray(profile.errorBank) && profile.errorBank.length > 0;
+      resultReviewMistakesBtnEl.style.display = hasSavedErrors ? "inline-block" : "none";
+
+      const isMistakesMode = attemptMode === "mistakes";
       const fullRunTotal = attemptQuestions.length;
-      const completedFullRun = fullRunTotal > 0 && answeredCount >= fullRunTotal;
+      const completedFullRun = !isMistakesMode && fullRunTotal > 0 && answeredCount >= fullRunTotal;
       const denominator = completedFullRun ? fullRunTotal : Math.max(1, answeredCount);
 
       const percentage = answeredCount > 0 ? Number(((score / denominator) * 100).toFixed(1)) : 0;
       const passed = completedFullRun ? percentage >= PASS_PERCENTAGE : null;
 
       const badgeEl = document.getElementById("statusBadge");
-      if (completedFullRun) {
+      if (isMistakesMode) {
+        badgeEl.className = "badge-partial";
+        badgeEl.textContent = "Робота над помилками";
+        summaryNoteEl.textContent = `Відпрацьовано ${answeredCount} із ${fullRunTotal} питань із банку помилок.`;
+      } else if (completedFullRun) {
         badgeEl.className = passed ? "badge-pass" : "badge-fail";
         badgeEl.textContent = passed ? "Складено" : "Не складено";
         summaryNoteEl.textContent = `Пройдено всі ${fullRunTotal} питань · прохідний поріг ${PASS_PERCENTAGE}%.`;
@@ -1359,24 +1512,37 @@
           percentage,
           passed,
           fullRun: completedFullRun,
+          mode: attemptMode,
           mistakes,
         });
       }
 
       attemptQuestions = [];
       answersByIndex = {};
+      attemptMode = "full";
       syncProgress(true);
     }
 
-    function startAttempt() {
+    function startAttempt(mode = "full") {
       if (!pool) return;
-      attemptQuestions = pool.nextAttempt(QUESTIONS_PER_RUN);
+
+      if (mode === "mistakes") {
+        const errorItems = Array.isArray(profile.errorBank) ? profile.errorBank : [];
+        if (errorItems.length === 0) return;
+        attemptQuestions = shuffleArray(errorItems).map(normalizeQuestion);
+        attemptMode = "mistakes";
+        remainingMs = 0;
+      } else {
+        attemptQuestions = pool.nextAttempt(QUESTIONS_PER_RUN);
+        attemptMode = "full";
+        remainingMs = DURATION_MS;
+      }
+
       answersByIndex = {};
       currentIdx = 0;
       score = 0;
       answeredCount = 0;
       attemptSaved = false;
-      remainingMs = DURATION_MS;
       progressBarEl.style.width = "0%";
 
       profileCardEl.style.display = "none";
@@ -1384,7 +1550,12 @@
       quizCardEl.style.display = "block";
 
       syncProgress(true);
-      startTimer();
+      if (attemptMode === "full") {
+        startTimer();
+      } else {
+        stopTimer();
+        renderTimer();
+      }
       renderQuestion();
     }
 
@@ -1395,10 +1566,14 @@
         : {};
       recalculateScoreFromAnswers();
       currentIdx = Math.min(Math.max(0, Number(savedSession.currentIdx) || 0), attemptQuestions.length - 1);
-      remainingMs = Math.max(0, Number(savedSession.remainingMs) || DURATION_MS);
+      attemptMode = savedSession.attemptMode === "mistakes" ? "mistakes" : "full";
+      remainingMs = Math.max(0, Number(savedSession.remainingMs) || 0);
+      if (attemptMode === "full" && remainingMs === 0 && !savedSession.remainingMs) {
+        remainingMs = DURATION_MS;
+      }
       attemptSaved = false;
 
-      if (remainingMs <= 0) {
+      if (attemptMode === "full" && remainingMs <= 0) {
         showSummary("time_up");
         return;
       }
@@ -1407,7 +1582,12 @@
       resultCardEl.style.display = "none";
       quizCardEl.style.display = "block";
 
-      startTimer();
+      if (attemptMode === "full") {
+        startTimer();
+      } else {
+        stopTimer();
+        renderTimer();
+      }
       renderQuestion();
     }
 
@@ -1426,10 +1606,12 @@
         resolvedName = tgName;
       }
 
+      const historyList = Array.isArray(remote.history) ? remote.history : [];
       profileKey = key;
       profile = {
         name: resolvedName,
-        history: Array.isArray(remote.history) ? remote.history : [],
+        history: historyList,
+        errorBank: buildErrorBankFromData(historyList, remote.errorBank),
       };
       pool = new QuestionPool(allQuestions, remote.usedIds || []);
       topProfileNameEl.textContent = profile.name;
@@ -1439,7 +1621,7 @@
         previousView = "quizCard";
         resumeAttempt(active);
       } else {
-        startAttempt();
+        startAttempt("full");
       }
 
       if (tgUser && resolvedName !== remote.name) {
@@ -1459,7 +1641,9 @@
     });
 
     finishEarlyBtnEl.addEventListener("click", () => showSummary("manual"));
-    startNewRunBtnEl.addEventListener("click", startAttempt);
+    startNewRunBtnEl.addEventListener("click", () => startAttempt("full"));
+    resultReviewMistakesBtnEl.addEventListener("click", () => startAttempt("mistakes"));
+    profileReviewMistakesBtnEl.addEventListener("click", () => startAttempt("mistakes"));
     openProfileBtnEl.addEventListener("click", openProfile);
     resultToProfileBtnEl.addEventListener("click", openProfile);
     backToQuizBtnEl.addEventListener("click", closeProfile);
@@ -1474,6 +1658,7 @@
 
     clearHistoryBtnEl.addEventListener("click", () => {
       profile.history = [];
+      profile.errorBank = [];
       syncProgress(true);
       renderProfileView();
     });
@@ -1481,7 +1666,7 @@
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) {
         stopTimer();
-      } else if (!attemptSaved && attemptQuestions.length > 0 && profileCardEl.style.display === "none") {
+      } else if (!attemptSaved && attemptQuestions.length > 0 && attemptMode === "full" && profileCardEl.style.display === "none") {
         startTimer();
       }
     });
