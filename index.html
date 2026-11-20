@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Тестування ЄДКІ</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root {
       --bg: #eef2f7;
@@ -27,9 +28,7 @@
       --shadow: 0 10px 30px rgba(15, 28, 46, 0.06);
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -86,7 +85,16 @@
     .stat-pill strong {
       color: var(--text);
       font-weight: 700;
+      font-variant-numeric: tabular-nums;
     }
+
+    .stat-pill.timer-warn {
+      background: var(--bad-bg);
+      border-color: #f4c7c3;
+      color: var(--bad-text);
+    }
+
+    .stat-pill.timer-warn strong { color: var(--bad-text); }
 
     .progress-wrap {
       width: 100%;
@@ -145,9 +153,7 @@
       transform: translateY(-1px);
     }
 
-    .option-btn:disabled {
-      cursor: default;
-    }
+    .option-btn:disabled { cursor: default; }
 
     .option-btn.correct {
       background: var(--ok-bg);
@@ -208,9 +214,7 @@
       transition: background-color 0.15s ease;
     }
 
-    button.primary:hover:not(:disabled) {
-      background: var(--accent-hover);
-    }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); }
 
     button.primary:disabled {
       opacity: 0.45;
@@ -246,38 +250,29 @@
       cursor: pointer;
     }
 
-    button.danger:hover {
-      background: #fbd9d6;
-    }
+    button.danger:hover { background: #fbd9d6; }
 
-    .badge-pass {
+    .badge-pass, .badge-fail, .badge-partial {
       display: inline-block;
       padding: 7px 16px;
       border-radius: 999px;
       font-weight: 700;
       font-size: 14px;
+    }
+
+    .badge-pass {
       background: var(--ok-bg);
       color: var(--ok-text);
       border: 1px solid var(--ok-border);
     }
 
     .badge-fail {
-      display: inline-block;
-      padding: 7px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 14px;
       background: var(--bad-bg);
       color: var(--bad-text);
       border: 1px solid var(--bad-border);
     }
 
     .badge-partial {
-      display: inline-block;
-      padding: 7px 16px;
-      border-radius: 999px;
-      font-weight: 700;
-      font-size: 14px;
       background: var(--neutral-bg);
       color: var(--neutral-text);
       border: 1px solid var(--neutral-border);
@@ -310,15 +305,14 @@
     }
 
     .profile-form {
-      display: flex;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
       gap: 10px;
-      flex-wrap: wrap;
-      margin: 16px 0 22px;
+      margin: 16px 0 12px;
     }
 
     .profile-input {
-      flex: 1;
-      min-width: 210px;
+      width: 100%;
       padding: 11px 14px;
       font-size: 15px;
       border: 1.5px solid var(--border);
@@ -331,6 +325,17 @@
     .profile-input:focus {
       border-color: var(--accent);
       background: #ffffff;
+    }
+
+    .profile-input[readonly] {
+      background: #eef2f7;
+      color: var(--muted);
+    }
+
+    .sync-note {
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 18px;
     }
 
     .history-list {
@@ -377,19 +382,12 @@
         padding: 20px 16px;
         border-radius: 18px;
       }
-
-      .question-text {
-        font-size: 17px;
-      }
-
+      .question-text { font-size: 17px; }
       .actions {
         flex-direction: column-reverse;
         align-items: stretch;
       }
-
-      button.primary,
-      button.secondary,
-      button.danger {
+      button.primary, button.secondary, button.danger {
         width: 100%;
         text-align: center;
       }
@@ -403,6 +401,7 @@
         <div class="stats-group">
           <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
           <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
+          <div class="stat-pill" id="timerPill">Час: <strong id="timerCounter">02:30:00</strong></div>
         </div>
         <button class="secondary" id="openProfileBtn" type="button">Профіль: <span id="topProfileName">Студент</span></button>
       </div>
@@ -444,19 +443,27 @@
     </div>
 
     <div class="card" id="profileCard" style="display: none;">
-      <h2 style="margin: 0 0 6px; font-size: 22px;">Профіль</h2>
-      <p style="color: var(--muted); margin: 0;">Збережені результати та статистика ваших спроб.</p>
+      <h2 style="margin: 0 0 6px; font-size: 22px;">Профіль Telegram</h2>
+      <p style="color: var(--muted); margin: 0;">Дані закріплюються за вашим Telegram-профілем на бекенді.</p>
 
-      <form class="profile-form" id="profileNameForm">
+      <form class="profile-form" id="profileForm">
+        <input
+          class="profile-input"
+          id="tgKeyInput"
+          type="text"
+          maxlength="64"
+          placeholder="Ключ профілю (наприклад, tg_123456789)"
+        />
         <input
           class="profile-input"
           id="profileNameInput"
           type="text"
           maxlength="40"
-          placeholder="Ваше ім'я або підпис"
+          placeholder="Ім'я або підпис"
         />
-        <button class="primary" type="submit">Зберегти ім'я</button>
+        <button class="primary" type="submit">Зберегти та синхронізувати</button>
       </form>
+      <div class="sync-note" id="syncStatusText">Синхронізація: підключення...</div>
 
       <div class="summary-grid">
         <div class="summary-box">
@@ -484,10 +491,42 @@
   </div>
 
   <script>
+    const API_BASE_URL = "https://edki-quiz.onrender.com";
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
-    const USED_IDS_KEY = "edki_nursing_used_ids_v2";
-    const PROFILE_KEY = "edki_nursing_profile_v1";
+    const DURATION_MS = 2.5 * 60 * 60 * 1000;
+    const CACHE_PREFIX = "edki_tg_state_v1_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v1";
+
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    }
+
+    function getTelegramUser() {
+      const tgUser = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe
+        ? window.Telegram.WebApp.initDataUnsafe.user
+        : null;
+      return tgUser && tgUser.id ? tgUser : null;
+    }
+
+    function detectProfileKey() {
+      const tgUser = getTelegramUser();
+      if (tgUser) {
+        return `tg_${tgUser.id}`;
+      }
+      try {
+        const saved = localStorage.getItem(LAST_KEY_STORAGE);
+        if (saved && saved.trim()) return saved.trim();
+      } catch {}
+      return "tg_guest";
+    }
+
+    function detectDefaultName() {
+      const tgUser = getTelegramUser();
+      if (!tgUser) return "Студент";
+      return [tgUser.first_name, tgUser.last_name].filter(Boolean).join(" ").trim() || tgUser.username || "Студент";
+    }
 
     function shuffleArray(items) {
       const copy = [...items];
@@ -505,10 +544,7 @@
         rawCorrect = 0;
       }
 
-      const indexed = opts.map((text, idx) => ({
-        text,
-        isCorrect: idx === rawCorrect,
-      }));
+      const indexed = opts.map((text, idx) => ({ text, isCorrect: idx === rawCorrect }));
       const shuffled = shuffleArray(indexed);
       const shuffledCorrectIdx = shuffled.findIndex((item) => item.isCorrect);
 
@@ -521,27 +557,12 @@
     }
 
     class QuestionPool {
-      constructor(allQuestions, storageKey = USED_IDS_KEY) {
+      constructor(allQuestions, initialUsedIds = []) {
         this.allQuestions = allQuestions;
-        this.storageKey = storageKey;
-        this.usedIds = this.loadUsedIds();
-      }
-
-      loadUsedIds() {
-        try {
-          const raw = localStorage.getItem(this.storageKey);
-          const parsed = raw ? JSON.parse(raw) : [];
-          const validIds = new Set(this.allQuestions.map((q) => q.id));
-          return Array.isArray(parsed) ? parsed.filter((id) => validIds.has(id)) : [];
-        } catch {
-          return [];
-        }
-      }
-
-      saveUsedIds() {
-        try {
-          localStorage.setItem(this.storageKey, JSON.stringify(this.usedIds));
-        } catch {}
+        const validIds = new Set(allQuestions.map((q) => q.id));
+        this.usedIds = Array.isArray(initialUsedIds)
+          ? initialUsedIds.filter((id) => validIds.has(id))
+          : [];
       }
 
       nextAttempt(count = QUESTIONS_PER_RUN) {
@@ -550,7 +571,6 @@
         const available = shuffleArray(this.allQuestions.filter((q) => !usedSet.has(q.id)));
 
         let picked = [];
-
         if (available.length >= targetCount) {
           picked = available.slice(0, targetCount);
           this.usedIds.push(...picked.map((q) => q.id));
@@ -564,42 +584,29 @@
           this.usedIds = extra.map((q) => q.id);
         }
 
-        this.saveUsedIds();
         return picked.map(normalizeQuestion);
       }
     }
 
-    function loadProfile() {
-      try {
-        const raw = localStorage.getItem(PROFILE_KEY);
-        const parsed = raw ? JSON.parse(raw) : null;
-        return {
-          name: parsed && typeof parsed.name === "string" && parsed.name.trim() ? parsed.name.trim() : "Студент",
-          history: parsed && Array.isArray(parsed.history) ? parsed.history : [],
-        };
-      } catch {
-        return { name: "Студент", history: [] };
-      }
-    }
-
-    function saveProfile(profile) {
-      try {
-        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
-      } catch {}
-    }
-
-    let profile = loadProfile();
+    let profileKey = detectProfileKey();
+    let profile = { name: detectDefaultName(), history: [] };
     let pool = null;
     let attemptQuestions = [];
     let currentIdx = 0;
     let score = 0;
     let answeredCount = 0;
-    let questionAnswered = false;
+    let currentSelection = null;
+    let remainingMs = DURATION_MS;
+    let lastTickMs = null;
+    let timerInterval = null;
     let attemptSaved = false;
     let previousView = "quizCard";
+    let syncTimer = null;
 
     const qCounterEl = document.getElementById("qCounter");
     const scoreCounterEl = document.getElementById("scoreCounter");
+    const timerPillEl = document.getElementById("timerPill");
+    const timerCounterEl = document.getElementById("timerCounter");
     const progressBarEl = document.getElementById("progressBar");
     const questionTextEl = document.getElementById("questionText");
     const optionsBoxEl = document.getElementById("optionsBox");
@@ -615,9 +622,167 @@
     const topProfileNameEl = document.getElementById("topProfileName");
     const resultToProfileBtnEl = document.getElementById("resultToProfileBtn");
     const backToQuizBtnEl = document.getElementById("backToQuizBtn");
-    const profileNameFormEl = document.getElementById("profileNameForm");
+    const profileFormEl = document.getElementById("profileForm");
+    const tgKeyInputEl = document.getElementById("tgKeyInput");
     const profileNameInputEl = document.getElementById("profileNameInput");
     const clearHistoryBtnEl = document.getElementById("clearHistoryBtn");
+    const syncStatusTextEl = document.getElementById("syncStatusText");
+
+    function buildSessionSnapshot() {
+      if (attemptSaved || attemptQuestions.length === 0) return null;
+      return {
+        attemptQuestions,
+        currentIdx,
+        score,
+        answeredCount,
+        currentSelection,
+        remainingMs: Math.max(0, Math.round(remainingMs)),
+      };
+    }
+
+    function buildStateSnapshot() {
+      return {
+        name: profile.name,
+        history: profile.history,
+        usedIds: pool ? pool.usedIds : [],
+        activeSession: buildSessionSnapshot(),
+      };
+    }
+
+    function saveLocal(key, snapshot) {
+      try {
+        localStorage.setItem(LAST_KEY_STORAGE, key);
+        localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(snapshot));
+      } catch {}
+    }
+
+    function loadLocal(key) {
+      try {
+        const raw = localStorage.getItem(`${CACHE_PREFIX}${key}`);
+        return raw ? JSON.parse(raw) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function pushToBackend(key, snapshot) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/state/${encodeURIComponent(key)}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(snapshot),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        syncStatusTextEl.textContent = `Закріплено за профілем ${key} (синхронізовано)`;
+      } catch {
+        syncStatusTextEl.textContent = `Збережено локально для ${key} (перевірте зв'язок із бекендом)`;
+      }
+    }
+
+    function syncProgress(immediate = false) {
+      const snapshot = buildStateSnapshot();
+      saveLocal(profileKey, snapshot);
+
+      if (immediate) {
+        if (syncTimer) clearTimeout(syncTimer);
+        pushToBackend(profileKey, snapshot);
+        return;
+      }
+
+      if (syncTimer) clearTimeout(syncTimer);
+      syncTimer = setTimeout(() => {
+        pushToBackend(profileKey, buildStateSnapshot());
+      }, 250);
+    }
+
+    async function fetchQuestions() {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/questions`, { cache: "no-store" });
+        if (!res.ok) throw new Error("API questions failed");
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) return data;
+      } catch {}
+
+      const fallbackRes = await fetch("questions.json", { cache: "no-store" });
+      if (!fallbackRes.ok) throw new Error("Не вдалося завантажити базу питань");
+      const fallbackData = await fallbackRes.json();
+      if (!Array.isArray(fallbackData) || fallbackData.length === 0) {
+        throw new Error("База питань порожня");
+      }
+      return fallbackData;
+    }
+
+    async function fetchStateFromBackend(key) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/state/${encodeURIComponent(key)}`, { cache: "no-store" });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const remote = await res.json();
+        saveLocal(key, remote);
+        syncStatusTextEl.textContent = `Завантажено профіль ${key} із сервера`;
+        return remote;
+      } catch {
+        const cached = loadLocal(key);
+        syncStatusTextEl.textContent = cached
+          ? `Використано локальний кеш для ${key}`
+          : `Новий профіль ${key} (очікування бекенда)`;
+        return cached || { name: detectDefaultName(), history: [], usedIds: [], activeSession: null };
+      }
+    }
+
+    function formatRemainingTime(ms) {
+      const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function renderTimer() {
+      timerCounterEl.textContent = formatRemainingTime(remainingMs);
+      if (remainingMs <= 10 * 60 * 1000) {
+        timerPillEl.classList.add("timer-warn");
+      } else {
+        timerPillEl.classList.remove("timer-warn");
+      }
+    }
+
+    function stepTimer() {
+      if (attemptSaved || attemptQuestions.length === 0) return;
+      const now = Date.now();
+      if (lastTickMs !== null && !document.hidden) {
+        const elapsed = Math.max(0, now - lastTickMs);
+        remainingMs = Math.max(0, remainingMs - elapsed);
+      }
+      lastTickMs = now;
+      renderTimer();
+      saveLocal(profileKey, buildStateSnapshot());
+
+      if (remainingMs <= 0) {
+        stopTimer();
+        showSummary("time_up");
+      }
+    }
+
+    function startTimer() {
+      stopTimer();
+      lastTickMs = Date.now();
+      renderTimer();
+      timerInterval = setInterval(stepTimer, 1000);
+    }
+
+    function stopTimer() {
+      if (!attemptSaved && attemptQuestions.length > 0 && lastTickMs !== null && !document.hidden) {
+        const now = Date.now();
+        remainingMs = Math.max(0, remainingMs - Math.max(0, now - lastTickMs));
+        syncProgress(true);
+      }
+      if (timerInterval !== null) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+      lastTickMs = null;
+    }
 
     function formatDate(isoStr) {
       try {
@@ -635,7 +800,10 @@
     }
 
     function renderProfileView() {
+      const isTg = Boolean(getTelegramUser());
       topProfileNameEl.textContent = profile.name;
+      tgKeyInputEl.value = profileKey;
+      tgKeyInputEl.readOnly = isTg;
       profileNameInputEl.value = profile.name;
 
       const totalAttempts = profile.history.length;
@@ -685,11 +853,8 @@
     }
 
     function openProfile() {
-      if (resultCardEl.style.display !== "none") {
-        previousView = "resultCard";
-      } else {
-        previousView = "quizCard";
-      }
+      stopTimer();
+      previousView = resultCardEl.style.display !== "none" ? "resultCard" : "quizCard";
       quizCardEl.style.display = "none";
       resultCardEl.style.display = "none";
       profileCardEl.style.display = "block";
@@ -702,6 +867,9 @@
         resultCardEl.style.display = "block";
       } else {
         quizCardEl.style.display = "block";
+        if (!attemptSaved && attemptQuestions.length > 0) {
+          startTimer();
+        }
       }
     }
 
@@ -715,19 +883,40 @@
       progressBarEl.style.width = `${progressPercent}%`;
     }
 
-    function renderQuestion() {
-      const q = attemptQuestions[currentIdx];
-      if (!q) {
-        showSummary();
+    function applyFeedbackState(q) {
+      const allButtons = optionsBoxEl.querySelectorAll(".option-btn");
+      if (!currentSelection) {
+        feedbackBoxEl.className = "feedback";
+        feedbackBoxEl.textContent = "";
+        nextBtnEl.disabled = true;
         return;
       }
 
-      questionAnswered = false;
-      feedbackBoxEl.className = "feedback";
-      feedbackBoxEl.textContent = "";
-      nextBtnEl.disabled = true;
-      nextBtnEl.textContent = currentIdx === attemptQuestions.length - 1 ? "Завершити тест" : "Наступне питання";
+      allButtons.forEach((b) => { b.disabled = true; });
 
+      const { selectedIdx, isCorrect } = currentSelection;
+      if (isCorrect) {
+        if (allButtons[selectedIdx]) allButtons[selectedIdx].classList.add("correct");
+        feedbackBoxEl.className = "feedback ok";
+        feedbackBoxEl.textContent = "Правильно";
+      } else {
+        if (allButtons[selectedIdx]) allButtons[selectedIdx].classList.add("wrong");
+        if (allButtons[q.correctIndex]) allButtons[q.correctIndex].classList.add("correct");
+        feedbackBoxEl.className = "feedback bad";
+        feedbackBoxEl.textContent = `Неправильно. Правильна відповідь: ${q.options[q.correctIndex]}`;
+      }
+
+      nextBtnEl.disabled = false;
+    }
+
+    function renderQuestion() {
+      const q = attemptQuestions[currentIdx];
+      if (!q) {
+        showSummary("completed");
+        return;
+      }
+
+      nextBtnEl.textContent = currentIdx === attemptQuestions.length - 1 ? "Завершити тест" : "Наступне питання";
       questionTextEl.textContent = q.question;
       optionsBoxEl.innerHTML = "";
 
@@ -736,45 +925,30 @@
         btn.type = "button";
         btn.className = "option-btn";
         btn.textContent = optText;
-        btn.addEventListener("click", () => handleAnswer(idx, btn));
+        btn.addEventListener("click", () => handleAnswer(idx));
         optionsBoxEl.appendChild(btn);
       });
 
+      applyFeedbackState(q);
       updateTopBar();
     }
 
-    function handleAnswer(selectedIdx, clickedBtn) {
-      if (questionAnswered) return;
-      questionAnswered = true;
-
+    function handleAnswer(selectedIdx) {
+      if (currentSelection || attemptSaved) return;
       const q = attemptQuestions[currentIdx];
-      const allButtons = optionsBoxEl.querySelectorAll(".option-btn");
-      allButtons.forEach((b) => {
-        b.disabled = true;
-      });
-
-      answeredCount += 1;
       const isCorrect = selectedIdx === q.correctIndex;
 
-      if (isCorrect) {
-        score += 1;
-        clickedBtn.classList.add("correct");
-        feedbackBoxEl.className = "feedback ok";
-        feedbackBoxEl.textContent = "Правильно";
-      } else {
-        clickedBtn.classList.add("wrong");
-        if (allButtons[q.correctIndex]) {
-          allButtons[q.correctIndex].classList.add("correct");
-        }
-        feedbackBoxEl.className = "feedback bad";
-        feedbackBoxEl.textContent = `Неправильно. Правильна відповідь: ${q.options[q.correctIndex]}`;
-      }
+      answeredCount += 1;
+      if (isCorrect) score += 1;
+      currentSelection = { selectedIdx, isCorrect };
 
-      nextBtnEl.disabled = false;
+      applyFeedbackState(q);
       updateTopBar();
+      syncProgress();
     }
 
-    function showSummary() {
+    function showSummary(reason = "manual") {
+      stopTimer();
       quizCardEl.style.display = "none";
       profileCardEl.style.display = "none";
       resultCardEl.style.display = "block";
@@ -794,7 +968,9 @@
       } else {
         badgeEl.className = "badge-partial";
         badgeEl.textContent = "Неповна спроба";
-        summaryNoteEl.textContent = `Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест на ${fullRunTotal} питань.`;
+        summaryNoteEl.textContent = reason === "time_up"
+          ? `Час вичерпано. Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест на ${fullRunTotal} питань.`
+          : `Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест на ${fullRunTotal} питань.`;
       }
 
       document.getElementById("finalScore").textContent = answeredCount > 0
@@ -813,8 +989,10 @@
           passed,
           fullRun: completedFullRun,
         });
-        saveProfile(profile);
       }
+
+      attemptQuestions = [];
+      syncProgress(true);
     }
 
     function startAttempt() {
@@ -823,51 +1001,122 @@
       currentIdx = 0;
       score = 0;
       answeredCount = 0;
+      currentSelection = null;
       attemptSaved = false;
+      remainingMs = DURATION_MS;
       progressBarEl.style.width = "0%";
 
       profileCardEl.style.display = "none";
       resultCardEl.style.display = "none";
       quizCardEl.style.display = "block";
+
+      syncProgress(true);
+      startTimer();
       renderQuestion();
     }
 
+    function resumeAttempt(savedSession) {
+      attemptQuestions = savedSession.attemptQuestions;
+      currentIdx = Math.min(Math.max(0, Number(savedSession.currentIdx) || 0), attemptQuestions.length - 1);
+      score = Number(savedSession.score) || 0;
+      answeredCount = Number(savedSession.answeredCount) || 0;
+      currentSelection = savedSession.currentSelection || null;
+      remainingMs = Math.max(0, Number(savedSession.remainingMs) || DURATION_MS);
+      attemptSaved = false;
+
+      if (remainingMs <= 0) {
+        showSummary("time_up");
+        return;
+      }
+
+      profileCardEl.style.display = "none";
+      resultCardEl.style.display = "none";
+      quizCardEl.style.display = "block";
+
+      startTimer();
+      renderQuestion();
+    }
+
+    async function loadProfileIntoApp(key, overrideName = null) {
+      const allQuestions = pool ? pool.allQuestions : await fetchQuestions();
+      const remote = await fetchStateFromBackend(key);
+
+      profileKey = key;
+      profile = {
+        name: overrideName || (typeof remote.name === "string" && remote.name.trim() ? remote.name.trim() : detectDefaultName()),
+        history: Array.isArray(remote.history) ? remote.history : [],
+      };
+      pool = new QuestionPool(allQuestions, remote.usedIds || []);
+      topProfileNameEl.textContent = profile.name;
+
+      const active = remote.activeSession;
+      if (active && Array.isArray(active.attemptQuestions) && active.attemptQuestions.length > 0) {
+        previousView = "quizCard";
+        resumeAttempt(active);
+      } else {
+        startAttempt();
+      }
+    }
+
     nextBtnEl.addEventListener("click", () => {
+      if (!currentSelection) return;
+      if (currentIdx + 1 >= attemptQuestions.length) {
+        showSummary("completed");
+        return;
+      }
       currentIdx += 1;
+      currentSelection = null;
+      syncProgress();
       renderQuestion();
     });
 
-    finishEarlyBtnEl.addEventListener("click", showSummary);
+    finishEarlyBtnEl.addEventListener("click", () => showSummary("manual"));
     startNewRunBtnEl.addEventListener("click", startAttempt);
     openProfileBtnEl.addEventListener("click", openProfile);
     resultToProfileBtnEl.addEventListener("click", openProfile);
     backToQuizBtnEl.addEventListener("click", closeProfile);
 
-    profileNameFormEl.addEventListener("submit", (e) => {
+    profileFormEl.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const cleaned = profileNameInputEl.value.trim();
-      profile.name = cleaned || "Студент";
-      saveProfile(profile);
-      topProfileNameEl.textContent = profile.name;
-      renderProfileView();
+      const isTg = Boolean(getTelegramUser());
+      const nextKey = isTg ? profileKey : (tgKeyInputEl.value.trim() || "tg_guest");
+      const nextName = profileNameInputEl.value.trim() || detectDefaultName();
+
+      if (nextKey !== profileKey) {
+        stopTimer();
+        await loadProfileIntoApp(nextKey, nextName);
+        syncProgress(true);
+        renderProfileView();
+      } else {
+        profile.name = nextName;
+        topProfileNameEl.textContent = profile.name;
+        syncProgress(true);
+        renderProfileView();
+      }
     });
 
     clearHistoryBtnEl.addEventListener("click", () => {
       profile.history = [];
-      saveProfile(profile);
+      syncProgress(true);
       renderProfileView();
     });
 
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        stopTimer();
+      } else if (!attemptSaved && attemptQuestions.length > 0 && profileCardEl.style.display === "none") {
+        startTimer();
+      }
+    });
+
+    window.addEventListener("pagehide", stopTimer);
+    window.addEventListener("beforeunload", stopTimer);
+
     async function init() {
       try {
-        const res = await fetch("questions.json", { cache: "no-store" });
-        if (!res.ok) throw new Error("Не вдалося завантажити базу питань");
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) {
-          throw new Error("База питань порожня");
-        }
-        pool = new QuestionPool(data);
-        startAttempt();
+        const allQuestions = await fetchQuestions();
+        pool = new QuestionPool(allQuestions, []);
+        await loadProfileIntoApp(profileKey);
       } catch (err) {
         questionTextEl.textContent = `Помилка: ${err.message}`;
       }
