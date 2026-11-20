@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Тестування ЄДКІ</title>
+  <style>
+    :root {
+      --bg: #eef2f7;
+      --card: #ffffff;
+      --surface: #f7f9fc;
+      --text: #141c24;
+      --muted: #617182;
+      --accent: #1366d6;
+      --accent-hover: #0e4fa8;
+      --accent-soft: #eaf2fd;
+      --border: #dfe6ef;
+      --ok-bg: #e8f7ed;
+      --ok-border: #239947;
+      --ok-text: #14632c;
+      --bad-bg: #fdeceb;
+      --bad-border: #d93829;
+      --bad-text: #9e1b10;
+      --shadow: 0 10px 30px rgba(15, 28, 46, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: radial-gradient(circle at top, #f7faff 0%, var(--bg) 65%);
+      color: var(--text);
+      line-height: 1.55;
+    }
+
+    .container {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 28px 16px 48px;
+    }
+
+    .topbar {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px 20px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .topbar-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      font-size: 15px;
+    }
+
+    .stats-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .stat-pill strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .progress-wrap {
+      width: 100%;
+      height: 7px;
+      background: #e6ecf3;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 14px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #1366d6, #388bfd);
+      border-radius: 999px;
+      transition: width 0.25s ease;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 28px 26px;
+      box-shadow: var(--shadow);
+    }
+
+    .question-text {
+      font-size: 19px;
+      font-weight: 600;
+      margin: 0 0 22px;
+      color: var(--text);
+    }
+
+    .options {
+      display: flex;
+      flex-direction: column;
+      gap: 11px;
+    }
+
+    .option-btn {
+      width: 100%;
+      text-align: left;
+      padding: 14px 18px;
+      font-size: 15.5px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1.5px solid var(--border);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform 0.1s ease, border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      transform: translateY(-1px);
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+    }
+
+    .option-btn.correct {
+      background: var(--ok-bg);
+      border-color: var(--ok-border);
+      color: var(--ok-text);
+      font-weight: 600;
+    }
+
+    .option-btn.wrong {
+      background: var(--bad-bg);
+      border-color: var(--bad-border);
+      color: var(--bad-text);
+    }
+
+    .feedback {
+      margin-top: 20px;
+      padding: 13px 16px;
+      border-radius: 14px;
+      font-weight: 600;
+      font-size: 15px;
+      display: none;
+    }
+
+    .feedback.ok {
+      display: block;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border: 1px solid var(--ok-border);
+    }
+
+    .feedback.bad {
+      display: block;
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border: 1px solid var(--bad-border);
+    }
+
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 24px;
+      padding-top: 18px;
+      border-top: 1px solid #eef2f6;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px 22px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+
+    button.primary:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    button.primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background: var(--surface);
+      color: var(--muted);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: color 0.15s ease, border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    button.secondary:hover {
+      color: var(--text);
+      border-color: #c7d2e0;
+      background: #eff3f8;
+    }
+
+    button.danger {
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border: 1px solid #f4c7c3;
+      border-radius: 12px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.danger:hover {
+      background: #fbd9d6;
+    }
+
+    .badge-pass {
+      display: inline-block;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      background: var(--ok-bg);
+      color: var(--ok-text);
+      border: 1px solid var(--ok-border);
+    }
+
+    .badge-fail {
+      display: inline-block;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      background: var(--bad-bg);
+      color: var(--bad-text);
+      border: 1px solid var(--bad-border);
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 14px;
+      margin: 22px 0;
+    }
+
+    .summary-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px 18px;
+    }
+
+    .summary-box span {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .summary-box strong {
+      font-size: 24px;
+      color: var(--text);
+    }
+
+    .profile-form {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin: 16px 0 22px;
+    }
+
+    .profile-input {
+      flex: 1;
+      min-width: 210px;
+      padding: 11px 14px;
+      font-size: 15px;
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+    }
+
+    .profile-input:focus {
+      border-color: var(--accent);
+      background: #ffffff;
+    }
+
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+    }
+
+    .history-meta {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .history-score {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 14px;
+      padding: 18px;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    @media (max-width: 520px) {
+      .card {
+        padding: 20px 16px;
+        border-radius: 18px;
+      }
+
+      .question-text {
+        font-size: 17px;
+      }
+
+      .actions {
+        flex-direction: column-reverse;
+        align-items: stretch;
+      }
+
+      button.primary,
+      button.secondary,
+      button.danger {
+        width: 100%;
+        text-align: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="topbar">
+      <div class="topbar-row">
+        <div class="stats-group">
+          <div class="stat-pill">Питання: <strong id="qCounter">0 / 0</strong></div>
+          <div class="stat-pill">Бали: <strong id="scoreCounter">0 / 0</strong></div>
+        </div>
+        <button class="secondary" id="openProfileBtn" type="button">Профіль: <span id="topProfileName">Студент</span></button>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-bar" id="progressBar"></div>
+      </div>
+    </div>
+
+    <div class="card" id="quizCard">
+      <p class="question-text" id="questionText">Завантаження...</p>
+      <div class="options" id="optionsBox"></div>
+      <div class="feedback" id="feedbackBox"></div>
+      <div class="actions">
+        <button class="secondary" id="finishEarlyBtn" type="button">Завершити спробу</button>
+        <button class="primary" id="nextBtn" type="button" disabled>Наступне питання</button>
+      </div>
+    </div>
+
+    <div class="card" id="resultCard" style="display: none;">
+      <div id="statusBadge"></div>
+      <h2 style="margin: 14px 0 6px; font-size: 22px;">Результат тестування</h2>
+      <p style="color: var(--muted); margin: 0;" id="summaryNote">Прохідний поріг — 42%.</p>
+
+      <div class="summary-grid">
+        <div class="summary-box">
+          <span>Бали</span>
+          <strong id="finalScore">0 / 0</strong>
+        </div>
+        <div class="summary-box">
+          <span>Відсоток</span>
+          <strong id="finalPercent">0%</strong>
+        </div>
+      </div>
+
+      <div class="actions" style="border-top: none; padding-top: 0; margin-top: 8px; justify-content: flex-start;">
+        <button class="primary" id="startNewRunBtn" type="button">Нова спроба</button>
+        <button class="secondary" id="resultToProfileBtn" type="button">Відкрити профіль</button>
+      </div>
+    </div>
+
+    <div class="card" id="profileCard" style="display: none;">
+      <h2 style="margin: 0 0 6px; font-size: 22px;">Профіль</h2>
+      <p style="color: var(--muted); margin: 0;">Збережені результати та статистика ваших спроб.</p>
+
+      <form class="profile-form" id="profileNameForm">
+        <input
+          class="profile-input"
+          id="profileNameInput"
+          type="text"
+          maxlength="40"
+          placeholder="Ваше ім'я або підпис"
+        />
+        <button class="primary" type="submit">Зберегти ім'я</button>
+      </form>
+
+      <div class="summary-grid">
+        <div class="summary-box">
+          <span>Спроб пройдено</span>
+          <strong id="profileTotalAttempts">0</strong>
+        </div>
+        <div class="summary-box">
+          <span>Найкращий результат</span>
+          <strong id="profileBestPercent">0%</strong>
+        </div>
+        <div class="summary-box">
+          <span>Середній відсоток</span>
+          <strong id="profileAvgPercent">0%</strong>
+        </div>
+      </div>
+
+      <h3 style="margin: 20px 0 8px; font-size: 17px;">Історія спроб</h3>
+      <div class="history-list" id="historyList"></div>
+
+      <div class="actions">
+        <button class="danger" id="clearHistoryBtn" type="button">Очистити історію</button>
+        <button class="primary" id="backToQuizBtn" type="button">Повернутися до тесту</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const QUESTIONS_PER_RUN = 150;
+    const PASS_PERCENTAGE = 42;
+    const USED_IDS_KEY = "edki_nursing_used_ids_v2";
+    const PROFILE_KEY = "edki_nursing_profile_v1";
+
+    function shuffleArray(items) {
+      const copy = [...items];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function normalizeQuestion(question) {
+      const opts = Array.isArray(question.options) ? question.options.filter(Boolean) : [];
+      let rawCorrect = Number(question.correctIndex);
+      if (!Number.isInteger(rawCorrect) || rawCorrect < 0 || rawCorrect >= opts.length) {
+        rawCorrect = 0;
+      }
+
+      const indexed = opts.map((text, idx) => ({
+        text,
+        isCorrect: idx === rawCorrect,
+      }));
+      const shuffled = shuffleArray(indexed);
+      const shuffledCorrectIdx = shuffled.findIndex((item) => item.isCorrect);
+
+      return {
+        id: question.id,
+        question: String(question.question || "").trim(),
+        options: shuffled.map((item) => item.text),
+        correctIndex: shuffledCorrectIdx >= 0 ? shuffledCorrectIdx : 0,
+      };
+    }
+
+    class QuestionPool {
+      constructor(allQuestions, storageKey = USED_IDS_KEY) {
+        this.allQuestions = allQuestions;
+        this.storageKey = storageKey;
+        this.usedIds = this.loadUsedIds();
+      }
+
+      loadUsedIds() {
+        try {
+          const raw = localStorage.getItem(this.storageKey);
+          const parsed = raw ? JSON.parse(raw) : [];
+          const validIds = new Set(this.allQuestions.map((q) => q.id));
+          return Array.isArray(parsed) ? parsed.filter((id) => validIds.has(id)) : [];
+        } catch {
+          return [];
+        }
+      }
+
+      saveUsedIds() {
+        try {
+          localStorage.setItem(this.storageKey, JSON.stringify(this.usedIds));
+        } catch {}
+      }
+
+      nextAttempt(count = QUESTIONS_PER_RUN) {
+        const targetCount = Math.min(count, this.allQuestions.length);
+        const usedSet = new Set(this.usedIds);
+        const available = shuffleArray(this.allQuestions.filter((q) => !usedSet.has(q.id)));
+
+        let picked = [];
+
+        if (available.length >= targetCount) {
+          picked = available.slice(0, targetCount);
+          this.usedIds.push(...picked.map((q) => q.id));
+        } else {
+          picked = [...available];
+          const needed = targetCount - picked.length;
+          const pickedIds = new Set(picked.map((q) => q.id));
+          const nextCycle = shuffleArray(this.allQuestions.filter((q) => !pickedIds.has(q.id)));
+          const extra = nextCycle.slice(0, needed);
+          picked.push(...extra);
+          this.usedIds = extra.map((q) => q.id);
+        }
+
+        this.saveUsedIds();
+        return picked.map(normalizeQuestion);
+      }
+    }
+
+    function loadProfile() {
+      try {
+        const raw = localStorage.getItem(PROFILE_KEY);
+        const parsed = raw ? JSON.parse(raw) : null;
+        return {
+          name: parsed && typeof parsed.name === "string" && parsed.name.trim() ? parsed.name.trim() : "Студент",
+          history: parsed && Array.isArray(parsed.history) ? parsed.history : [],
+        };
+      } catch {
+        return { name: "Студент", history: [] };
+      }
+    }
+
+    function saveProfile(profile) {
+      try {
+        localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+      } catch {}
+    }
+
+    let profile = loadProfile();
+    let pool = null;
+    let attemptQuestions = [];
+    let currentIdx = 0;
+    let score = 0;
+    let answeredCount = 0;
+    let questionAnswered = false;
+    let attemptSaved = false;
+    let previousView = "quizCard";
+
+    const qCounterEl = document.getElementById("qCounter");
+    const scoreCounterEl = document.getElementById("scoreCounter");
+    const progressBarEl = document.getElementById("progressBar");
+    const questionTextEl = document.getElementById("questionText");
+    const optionsBoxEl = document.getElementById("optionsBox");
+    const feedbackBoxEl = document.getElementById("feedbackBox");
+    const nextBtnEl = document.getElementById("nextBtn");
+    const finishEarlyBtnEl = document.getElementById("finishEarlyBtn");
+    const startNewRunBtnEl = document.getElementById("startNewRunBtn");
+    const quizCardEl = document.getElementById("quizCard");
+    const resultCardEl = document.getElementById("resultCard");
+    const profileCardEl = document.getElementById("profileCard");
+    const summaryNoteEl = document.getElementById("summaryNote");
+    const openProfileBtnEl = document.getElementById("openProfileBtn");
+    const topProfileNameEl = document.getElementById("topProfileName");
+    const resultToProfileBtnEl = document.getElementById("resultToProfileBtn");
+    const backToQuizBtnEl = document.getElementById("backToQuizBtn");
+    const profileNameFormEl = document.getElementById("profileNameForm");
+    const profileNameInputEl = document.getElementById("profileNameInput");
+    const clearHistoryBtnEl = document.getElementById("clearHistoryBtn");
+
+    function formatDate(isoStr) {
+      try {
+        const d = new Date(isoStr);
+        return d.toLocaleString("uk-UA", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      } catch {
+        return "";
+      }
+    }
+
+    function renderProfileView() {
+      topProfileNameEl.textContent = profile.name;
+      profileNameInputEl.value = profile.name;
+
+      const totalAttempts = profile.history.length;
+      const bestPercent = totalAttempts > 0
+        ? Math.max(...profile.history.map((item) => Number(item.percentage) || 0))
+        : 0;
+      const avgPercent = totalAttempts > 0
+        ? Number((profile.history.reduce((acc, item) => acc + (Number(item.percentage) || 0), 0) / totalAttempts).toFixed(1))
+        : 0;
+
+      document.getElementById("profileTotalAttempts").textContent = String(totalAttempts);
+      document.getElementById("profileBestPercent").textContent = `${bestPercent}%`;
+      document.getElementById("profileAvgPercent").textContent = `${avgPercent}%`;
+
+      const historyListEl = document.getElementById("historyList");
+      historyListEl.innerHTML = "";
+
+      if (totalAttempts === 0) {
+        historyListEl.innerHTML = '<div class="empty-state">Поки що немає збережених спроб. Завершіть тест, щоб побачити результат тут.</div>';
+        return;
+      }
+
+      profile.history.forEach((entry) => {
+        const row = document.createElement("div");
+        row.className = "history-item";
+
+        const left = document.createElement("div");
+        const modeLabel = entry.fullRun ? "Повна спроба" : `Достроково (${entry.answeredCount} питань)`;
+        left.innerHTML = `
+          <div class="history-score">${entry.score} / ${entry.denominator} (${entry.percentage}%)</div>
+          <div class="history-meta">${modeLabel} · ${formatDate(entry.date)}</div>
+        `;
+
+        const badge = document.createElement("span");
+        badge.className = entry.passed ? "badge-pass" : "badge-fail";
+        badge.textContent = entry.passed ? "Складено" : "Не складено";
+
+        row.appendChild(left);
+        row.appendChild(badge);
+        historyListEl.appendChild(row);
+      });
+    }
+
+    function openProfile() {
+      if (resultCardEl.style.display !== "none") {
+        previousView = "resultCard";
+      } else {
+        previousView = "quizCard";
+      }
+      quizCardEl.style.display = "none";
+      resultCardEl.style.display = "none";
+      profileCardEl.style.display = "block";
+      renderProfileView();
+    }
+
+    function closeProfile() {
+      profileCardEl.style.display = "none";
+      if (previousView === "resultCard") {
+        resultCardEl.style.display = "block";
+      } else {
+        quizCardEl.style.display = "block";
+      }
+    }
+
+    function updateTopBar() {
+      const total = attemptQuestions.length;
+      const shownNum = total > 0 ? Math.min(currentIdx + 1, total) : 0;
+      qCounterEl.textContent = `${shownNum} / ${total}`;
+      scoreCounterEl.textContent = `${score} / ${total}`;
+      topProfileNameEl.textContent = profile.name;
+      const progressPercent = total > 0 ? (answeredCount / total) * 100 : 0;
+      progressBarEl.style.width = `${progressPercent}%`;
+    }
+
+    function renderQuestion() {
+      const q = attemptQuestions[currentIdx];
+      if (!q) {
+        showSummary();
+        return;
+      }
+
+      questionAnswered = false;
+      feedbackBoxEl.className = "feedback";
+      feedbackBoxEl.textContent = "";
+      nextBtnEl.disabled = true;
+      nextBtnEl.textContent = currentIdx === attemptQuestions.length - 1 ? "Завершити тест" : "Наступне питання";
+
+      questionTextEl.textContent = q.question;
+      optionsBoxEl.innerHTML = "";
+
+      q.options.forEach((optText, idx) => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "option-btn";
+        btn.textContent = optText;
+        btn.addEventListener("click", () => handleAnswer(idx, btn));
+        optionsBoxEl.appendChild(btn);
+      });
+
+      updateTopBar();
+    }
+
+    function handleAnswer(selectedIdx, clickedBtn) {
+      if (questionAnswered) return;
+      questionAnswered = true;
+
+      const q = attemptQuestions[currentIdx];
+      const allButtons = optionsBoxEl.querySelectorAll(".option-btn");
+      allButtons.forEach((b) => {
+        b.disabled = true;
+      });
+
+      answeredCount += 1;
+      const isCorrect = selectedIdx === q.correctIndex;
+
+      if (isCorrect) {
+        score += 1;
+        clickedBtn.classList.add("correct");
+        feedbackBoxEl.className = "feedback ok";
+        feedbackBoxEl.textContent = "Правильно";
+      } else {
+        clickedBtn.classList.add("wrong");
+        if (allButtons[q.correctIndex]) {
+          allButtons[q.correctIndex].classList.add("correct");
+        }
+        feedbackBoxEl.className = "feedback bad";
+        feedbackBoxEl.textContent = `Неправильно. Правильна відповідь: ${q.options[q.correctIndex]}`;
+      }
+
+      nextBtnEl.disabled = false;
+      updateTopBar();
+    }
+
+    function showSummary() {
+      quizCardEl.style.display = "none";
+      profileCardEl.style.display = "none";
+      resultCardEl.style.display = "block";
+
+      const fullRunTotal = attemptQuestions.length;
+      const completedFullRun = answeredCount >= fullRunTotal && fullRunTotal > 0;
+      const denominator = completedFullRun ? fullRunTotal : Math.max(1, answeredCount);
+
+      const percentage = answeredCount > 0 ? Number(((score / denominator) * 100).toFixed(1)) : 0;
+      const passed = percentage >= PASS_PERCENTAGE;
+
+      const badgeEl = document.getElementById("statusBadge");
+      badgeEl.className = passed ? "badge-pass" : "badge-fail";
+      badgeEl.textContent = passed ? "Складено" : "Не складено";
+
+      summaryNoteEl.textContent = completedFullRun
+        ? `Повна спроба (${fullRunTotal} питань) · прохідний поріг ${PASS_PERCENTAGE}%.`
+        : `Дострокове завершення (${answeredCount} пройдених питань) · прохідний поріг ${PASS_PERCENTAGE}%.`;
+
+      document.getElementById("finalScore").textContent = answeredCount > 0
+        ? `${score} / ${denominator}`
+        : `0 / 0`;
+      document.getElementById("finalPercent").textContent = `${percentage}%`;
+
+      if (!attemptSaved && answeredCount > 0) {
+        attemptSaved = true;
+        profile.history.unshift({
+          date: new Date().toISOString(),
+          score,
+          denominator,
+          answeredCount,
+          percentage,
+          passed,
+          fullRun: completedFullRun,
+        });
+        saveProfile(profile);
+      }
+    }
+
+    function startAttempt() {
+      if (!pool) return;
+      attemptQuestions = pool.nextAttempt(QUESTIONS_PER_RUN);
+      currentIdx = 0;
+      score = 0;
+      answeredCount = 0;
+      attemptSaved = false;
+      progressBarEl.style.width = "0%";
+
+      profileCardEl.style.display = "none";
+      resultCardEl.style.display = "none";
+      quizCardEl.style.display = "block";
+      renderQuestion();
+    }
+
+    nextBtnEl.addEventListener("click", () => {
+      currentIdx += 1;
+      renderQuestion();
+    });
+
+    finishEarlyBtnEl.addEventListener("click", showSummary);
+    startNewRunBtnEl.addEventListener("click", startAttempt);
+    openProfileBtnEl.addEventListener("click", openProfile);
+    resultToProfileBtnEl.addEventListener("click", openProfile);
+    backToQuizBtnEl.addEventListener("click", closeProfile);
+
+    profileNameFormEl.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const cleaned = profileNameInputEl.value.trim();
+      profile.name = cleaned || "Студент";
+      saveProfile(profile);
+      topProfileNameEl.textContent = profile.name;
+      renderProfileView();
+    });
+
+    clearHistoryBtnEl.addEventListener("click", () => {
+      profile.history = [];
+      saveProfile(profile);
+      renderProfileView();
+    });
+
+    async function init() {
+      try {
+        const res = await fetch("questions.json", { cache: "no-store" });
+        if (!res.ok) throw new Error("Не вдалося завантажити базу питань");
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          throw new Error("База питань порожня");
+        }
+        pool = new QuestionPool(data);
+        startAttempt();
+      } catch (err) {
+        questionTextEl.textContent = `Помилка: ${err.message}`;
+      }
+    }
+
+    init();
+  </script>
+</body>
+</html>
