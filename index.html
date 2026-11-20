@@ -175,6 +175,85 @@
       word-break: break-word;
     }
 
+    .nav-panel {
+      margin-bottom: 18px;
+      padding: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .nav-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      font-size: 12.5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .nav-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+      gap: 6px;
+      max-height: 118px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .nav-num-btn {
+      height: 32px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--text);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.08s ease, border-color 0.12s ease, background-color 0.12s ease;
+    }
+
+    .nav-num-btn:hover {
+      border-color: var(--accent);
+      background: var(--surface-hover);
+    }
+
+    .nav-num-btn.answered-ok {
+      background: var(--ok-bg);
+      border-color: var(--ok-border);
+      color: var(--ok-text);
+    }
+
+    .nav-num-btn.answered-bad {
+      background: var(--bad-bg);
+      border-color: var(--bad-border);
+      color: var(--bad-text);
+    }
+
+    .nav-num-btn.active {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .nav-num-btn.answered-ok.active {
+      background: #d5f2df;
+      color: var(--ok-text);
+    }
+
+    .nav-num-btn.answered-bad.active {
+      background: #fcdadb;
+      color: var(--bad-text);
+    }
+
     .question-text {
       font-size: 18.5px;
       font-weight: 650;
@@ -472,6 +551,9 @@
         padding: 18px 14px;
         border-radius: 20px;
       }
+      .nav-grid {
+        grid-template-columns: repeat(auto-fill, minmax(32px, 1fr));
+      }
       .question-text {
         font-size: 17px;
       }
@@ -509,6 +591,14 @@
     </div>
 
     <div class="card" id="quizCard">
+      <div class="nav-panel" id="navPanel">
+        <div class="nav-header">
+          <span>Навігація по питаннях</span>
+          <span id="navAnsweredSummary">0 відповідей</span>
+        </div>
+        <div class="nav-grid" id="navGrid"></div>
+      </div>
+
       <p class="question-text" id="questionText">Завантаження...</p>
       <div class="options" id="optionsBox"></div>
       <div class="feedback" id="feedbackBox"></div>
@@ -586,8 +676,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v2_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v2";
+    const CACHE_PREFIX = "edki_tg_state_v3_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v3";
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
@@ -687,10 +777,10 @@
     };
     let pool = null;
     let attemptQuestions = [];
+    let answersByIndex = {};
     let currentIdx = 0;
     let score = 0;
     let answeredCount = 0;
-    let currentSelection = null;
     let remainingMs = DURATION_MS;
     let lastTickMs = null;
     let timerInterval = null;
@@ -703,6 +793,8 @@
     const timerPillEl = document.getElementById("timerPill");
     const timerCounterEl = document.getElementById("timerCounter");
     const progressBarEl = document.getElementById("progressBar");
+    const navGridEl = document.getElementById("navGrid");
+    const navAnsweredSummaryEl = document.getElementById("navAnsweredSummary");
     const questionTextEl = document.getElementById("questionText");
     const optionsBoxEl = document.getElementById("optionsBox");
     const feedbackBoxEl = document.getElementById("feedbackBox");
@@ -722,14 +814,27 @@
     const clearHistoryBtnEl = document.getElementById("clearHistoryBtn");
     const syncStatusTextEl = document.getElementById("syncStatusText");
 
+    function recalculateScoreFromAnswers() {
+      let correctTotal = 0;
+      let countTotal = 0;
+      Object.values(answersByIndex).forEach((entry) => {
+        if (entry && typeof entry === "object") {
+          countTotal += 1;
+          if (entry.isCorrect) correctTotal += 1;
+        }
+      });
+      answeredCount = countTotal;
+      score = correctTotal;
+    }
+
     function buildSessionSnapshot() {
       if (attemptSaved || attemptQuestions.length === 0) return null;
       return {
         attemptQuestions,
+        answersByIndex,
         currentIdx,
         score,
         answeredCount,
-        currentSelection,
         remainingMs: Math.max(0, Math.round(remainingMs)),
       };
     }
@@ -962,6 +1067,36 @@
       }
     }
 
+    function renderQuestionNav() {
+      const total = attemptQuestions.length;
+      navAnsweredSummaryEl.textContent = `${answeredCount} з ${total}`;
+      navGridEl.innerHTML = "";
+
+      for (let i = 0; i < total; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "nav-num-btn";
+        btn.textContent = String(i + 1);
+
+        const ans = answersByIndex[i];
+        if (ans && typeof ans === "object") {
+          btn.classList.add(ans.isCorrect ? "answered-ok" : "answered-bad");
+        }
+        if (i === currentIdx) {
+          btn.classList.add("active");
+        }
+
+        btn.addEventListener("click", () => {
+          if (i === currentIdx || attemptSaved) return;
+          currentIdx = i;
+          syncProgress();
+          renderQuestion();
+        });
+
+        navGridEl.appendChild(btn);
+      }
+    }
+
     function updateTopBar() {
       const total = attemptQuestions.length;
       const shownNum = total > 0 ? Math.min(currentIdx + 1, total) : 0;
@@ -970,11 +1105,12 @@
       topProfileNameEl.textContent = profile.name;
       const progressPercent = total > 0 ? (answeredCount / total) * 100 : 0;
       progressBarEl.style.width = `${progressPercent}%`;
+      renderQuestionNav();
     }
 
-    function applyFeedbackState(q) {
+    function applyFeedbackState(q, selection) {
       const allButtons = optionsBoxEl.querySelectorAll(".option-btn");
-      if (!currentSelection) {
+      if (!selection) {
         feedbackBoxEl.className = "feedback";
         feedbackBoxEl.textContent = "";
         nextBtnEl.disabled = true;
@@ -983,7 +1119,7 @@
 
       allButtons.forEach((b) => { b.disabled = true; });
 
-      const { selectedIdx, isCorrect } = currentSelection;
+      const { selectedIdx, isCorrect } = selection;
       if (isCorrect) {
         if (allButtons[selectedIdx]) allButtons[selectedIdx].classList.add("correct");
         feedbackBoxEl.className = "feedback ok";
@@ -1005,6 +1141,7 @@
         return;
       }
 
+      const existingSelection = answersByIndex[currentIdx] || null;
       nextBtnEl.textContent = currentIdx === attemptQuestions.length - 1 ? "Завершити тест" : "Наступне питання";
       questionTextEl.textContent = q.question;
       optionsBoxEl.innerHTML = "";
@@ -1018,20 +1155,19 @@
         optionsBoxEl.appendChild(btn);
       });
 
-      applyFeedbackState(q);
+      applyFeedbackState(q, existingSelection);
       updateTopBar();
     }
 
     function handleAnswer(selectedIdx) {
-      if (currentSelection || attemptSaved) return;
+      if (answersByIndex[currentIdx] || attemptSaved) return;
       const q = attemptQuestions[currentIdx];
       const isCorrect = selectedIdx === q.correctIndex;
 
-      answeredCount += 1;
-      if (isCorrect) score += 1;
-      currentSelection = { selectedIdx, isCorrect };
+      answersByIndex[currentIdx] = { selectedIdx, isCorrect };
+      recalculateScoreFromAnswers();
 
-      applyFeedbackState(q);
+      applyFeedbackState(q, answersByIndex[currentIdx]);
       updateTopBar();
       syncProgress();
     }
@@ -1042,6 +1178,7 @@
       profileCardEl.style.display = "none";
       resultCardEl.style.display = "block";
 
+      recalculateScoreFromAnswers();
       const fullRunTotal = attemptQuestions.length;
       const completedFullRun = fullRunTotal > 0 && answeredCount >= fullRunTotal;
       const denominator = completedFullRun ? fullRunTotal : Math.max(1, answeredCount);
@@ -1081,16 +1218,17 @@
       }
 
       attemptQuestions = [];
+      answersByIndex = {};
       syncProgress(true);
     }
 
     function startAttempt() {
       if (!pool) return;
       attemptQuestions = pool.nextAttempt(QUESTIONS_PER_RUN);
+      answersByIndex = {};
       currentIdx = 0;
       score = 0;
       answeredCount = 0;
-      currentSelection = null;
       attemptSaved = false;
       remainingMs = DURATION_MS;
       progressBarEl.style.width = "0%";
@@ -1106,10 +1244,11 @@
 
     function resumeAttempt(savedSession) {
       attemptQuestions = savedSession.attemptQuestions;
+      answersByIndex = savedSession.answersByIndex && typeof savedSession.answersByIndex === "object"
+        ? { ...savedSession.answersByIndex }
+        : {};
+      recalculateScoreFromAnswers();
       currentIdx = Math.min(Math.max(0, Number(savedSession.currentIdx) || 0), attemptQuestions.length - 1);
-      score = Number(savedSession.score) || 0;
-      answeredCount = Number(savedSession.answeredCount) || 0;
-      currentSelection = savedSession.currentSelection || null;
       remainingMs = Math.max(0, Number(savedSession.remainingMs) || DURATION_MS);
       attemptSaved = false;
 
@@ -1163,13 +1302,12 @@
     }
 
     nextBtnEl.addEventListener("click", () => {
-      if (!currentSelection) return;
+      if (!answersByIndex[currentIdx]) return;
       if (currentIdx + 1 >= attemptQuestions.length) {
         showSummary("completed");
         return;
       }
       currentIdx += 1;
-      currentSelection = null;
       syncProgress();
       renderQuestion();
     });
