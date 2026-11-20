@@ -457,6 +457,82 @@
       overflow-wrap: anywhere;
     }
 
+    .mistakes-section {
+      margin-top: 22px;
+      padding-top: 18px;
+      border-top: 1px solid #edf2f7;
+      min-width: 0;
+    }
+
+    .mistakes-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mistakes-header h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .mistakes-count {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--bad-text);
+      background: var(--bad-bg);
+      border: 1px solid #f3c5c1;
+      padding: 4px 11px;
+      border-radius: 999px;
+    }
+
+    .mistakes-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 440px;
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+
+    .mistake-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 16px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    .mistake-q {
+      font-weight: 650;
+      font-size: 15px;
+      margin: 0 0 10px;
+      color: var(--text);
+    }
+
+    .mistake-ans {
+      font-size: 13.5px;
+      padding: 8px 11px;
+      border-radius: 10px;
+      margin-top: 6px;
+    }
+
+    .mistake-ans.user-choice {
+      background: var(--bad-bg);
+      border: 1px solid #f3c5c1;
+      color: var(--bad-text);
+    }
+
+    .mistake-ans.right-choice {
+      background: var(--ok-bg);
+      border: 1px solid #bce6ca;
+      color: var(--ok-text);
+    }
+
     .profile-form {
       display: flex;
       gap: 10px;
@@ -624,7 +700,15 @@
         </div>
       </div>
 
-      <div class="actions" style="border-top: none; padding-top: 0; margin-top: 8px; justify-content: flex-start;">
+      <div class="mistakes-section" id="mistakesSection">
+        <div class="mistakes-header">
+          <h3>Розбір помилок</h3>
+          <span class="mistakes-count" id="mistakesCountBadge" style="display: none;">0 помилок</span>
+        </div>
+        <div class="mistakes-list" id="mistakesList"></div>
+      </div>
+
+      <div class="actions" style="border-top: none; padding-top: 16px; margin-top: 14px; justify-content: flex-start;">
         <button class="primary" id="startNewRunBtn" type="button">Нова спроба</button>
         <button class="secondary" id="resultToProfileBtn" type="button">Відкрити профіль</button>
       </div>
@@ -676,8 +760,8 @@
     const QUESTIONS_PER_RUN = 150;
     const PASS_PERCENTAGE = 42;
     const DURATION_MS = 2.5 * 60 * 60 * 1000;
-    const CACHE_PREFIX = "edki_tg_state_v3_";
-    const LAST_KEY_STORAGE = "edki_tg_last_key_v3";
+    const CACHE_PREFIX = "edki_tg_state_v4_";
+    const LAST_KEY_STORAGE = "edki_tg_last_key_v4";
 
     if (window.Telegram && window.Telegram.WebApp) {
       window.Telegram.WebApp.ready();
@@ -805,6 +889,8 @@
     const resultCardEl = document.getElementById("resultCard");
     const profileCardEl = document.getElementById("profileCard");
     const summaryNoteEl = document.getElementById("summaryNote");
+    const mistakesCountBadgeEl = document.getElementById("mistakesCountBadge");
+    const mistakesListEl = document.getElementById("mistakesList");
     const openProfileBtnEl = document.getElementById("openProfileBtn");
     const topProfileNameEl = document.getElementById("topProfileName");
     const resultToProfileBtnEl = document.getElementById("resultToProfileBtn");
@@ -825,6 +911,59 @@
       });
       answeredCount = countTotal;
       score = correctTotal;
+    }
+
+    function collectMistakes(questionsList, answersMap) {
+      const items = [];
+      questionsList.forEach((q, idx) => {
+        const ans = answersMap[idx];
+        if (!ans || typeof ans !== "object" || ans.isCorrect) return;
+        const userAnswer = q.options[ans.selectedIdx] ?? "Не вибрано";
+        const correctAnswer = q.options[q.correctIndex] ?? "";
+        items.push({
+          id: q.id,
+          questionNumber: idx + 1,
+          question: q.question,
+          userAnswer,
+          correctAnswer,
+        });
+      });
+      return items;
+    }
+
+    function renderMistakesReview(mistakes) {
+      mistakesListEl.innerHTML = "";
+
+      if (!Array.isArray(mistakes) || mistakes.length === 0) {
+        mistakesCountBadgeEl.style.display = "none";
+        mistakesListEl.innerHTML = '<div class="empty-state">Чудово — у цій спробі немає жодної помилки.</div>';
+        return;
+      }
+
+      mistakesCountBadgeEl.style.display = "inline-block";
+      mistakesCountBadgeEl.textContent = `${mistakes.length} помилок`;
+
+      mistakes.forEach((m) => {
+        const card = document.createElement("div");
+        card.className = "mistake-card";
+
+        const qTitle = document.createElement("p");
+        qTitle.className = "mistake-q";
+        qTitle.textContent = `${m.questionNumber}. ${m.question}`;
+
+        const userBox = document.createElement("div");
+        userBox.className = "mistake-ans user-choice";
+        userBox.textContent = `Ваша відповідь: ${m.userAnswer}`;
+
+        const rightBox = document.createElement("div");
+        rightBox.className = "mistake-ans right-choice";
+        rightBox.textContent = `Правильна відповідь: ${m.correctAnswer}`;
+
+        card.appendChild(qTitle);
+        card.appendChild(userBox);
+        card.appendChild(rightBox);
+        mistakesListEl.appendChild(card);
+      });
     }
 
     function buildSessionSnapshot() {
@@ -1025,10 +1164,13 @@
         row.className = "history-item";
 
         const left = document.createElement("div");
+        const mistakesPart = Array.isArray(entry.mistakes) && entry.mistakes.length > 0
+          ? ` · помилок: ${entry.mistakes.length}`
+          : "";
         const modeLabel = entry.fullRun ? "Повна спроба (150)" : `Неповна спроба (${entry.answeredCount} питань)`;
         left.innerHTML = `
           <div class="history-score">${entry.score} / ${entry.denominator} (${entry.percentage}%)</div>
-          <div class="history-meta">${modeLabel} · ${formatDate(entry.date)}</div>
+          <div class="history-meta">${modeLabel}${mistakesPart} · ${formatDate(entry.date)}</div>
         `;
 
         const badge = document.createElement("span");
@@ -1179,6 +1321,9 @@
       resultCardEl.style.display = "block";
 
       recalculateScoreFromAnswers();
+      const mistakes = collectMistakes(attemptQuestions, answersByIndex);
+      renderMistakesReview(mistakes);
+
       const fullRunTotal = attemptQuestions.length;
       const completedFullRun = fullRunTotal > 0 && answeredCount >= fullRunTotal;
       const denominator = completedFullRun ? fullRunTotal : Math.max(1, answeredCount);
@@ -1214,6 +1359,7 @@
           percentage,
           passed,
           fullRun: completedFullRun,
+          mistakes,
         });
       }
 
