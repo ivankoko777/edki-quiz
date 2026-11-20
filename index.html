@@ -21,6 +21,9 @@
       --bad-bg: #fdeceb;
       --bad-border: #d93829;
       --bad-text: #9e1b10;
+      --neutral-bg: #eef2f7;
+      --neutral-border: #c9d4e3;
+      --neutral-text: #3b4a5a;
       --shadow: 0 10px 30px rgba(15, 28, 46, 0.06);
     }
 
@@ -269,6 +272,17 @@
       border: 1px solid var(--bad-border);
     }
 
+    .badge-partial {
+      display: inline-block;
+      padding: 7px 16px;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: 14px;
+      background: var(--neutral-bg);
+      color: var(--neutral-text);
+      border: 1px solid var(--neutral-border);
+    }
+
     .summary-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -410,7 +424,7 @@
     <div class="card" id="resultCard" style="display: none;">
       <div id="statusBadge"></div>
       <h2 style="margin: 14px 0 6px; font-size: 22px;">Результат тестування</h2>
-      <p style="color: var(--muted); margin: 0;" id="summaryNote">Прохідний поріг — 42%.</p>
+      <p style="color: var(--muted); margin: 0;" id="summaryNote"></p>
 
       <div class="summary-grid">
         <div class="summary-box">
@@ -649,15 +663,20 @@
         row.className = "history-item";
 
         const left = document.createElement("div");
-        const modeLabel = entry.fullRun ? "Повна спроба" : `Достроково (${entry.answeredCount} питань)`;
+        const modeLabel = entry.fullRun ? "Повна спроба (150)" : `Неповна спроба (${entry.answeredCount} питань)`;
         left.innerHTML = `
           <div class="history-score">${entry.score} / ${entry.denominator} (${entry.percentage}%)</div>
           <div class="history-meta">${modeLabel} · ${formatDate(entry.date)}</div>
         `;
 
         const badge = document.createElement("span");
-        badge.className = entry.passed ? "badge-pass" : "badge-fail";
-        badge.textContent = entry.passed ? "Складено" : "Не складено";
+        if (entry.fullRun) {
+          badge.className = entry.passed ? "badge-pass" : "badge-fail";
+          badge.textContent = entry.passed ? "Складено" : "Не складено";
+        } else {
+          badge.className = "badge-partial";
+          badge.textContent = "Неповна спроба";
+        }
 
         row.appendChild(left);
         row.appendChild(badge);
@@ -761,19 +780,22 @@
       resultCardEl.style.display = "block";
 
       const fullRunTotal = attemptQuestions.length;
-      const completedFullRun = answeredCount >= fullRunTotal && fullRunTotal > 0;
+      const completedFullRun = fullRunTotal > 0 && answeredCount >= fullRunTotal;
       const denominator = completedFullRun ? fullRunTotal : Math.max(1, answeredCount);
 
       const percentage = answeredCount > 0 ? Number(((score / denominator) * 100).toFixed(1)) : 0;
-      const passed = percentage >= PASS_PERCENTAGE;
+      const passed = completedFullRun ? percentage >= PASS_PERCENTAGE : null;
 
       const badgeEl = document.getElementById("statusBadge");
-      badgeEl.className = passed ? "badge-pass" : "badge-fail";
-      badgeEl.textContent = passed ? "Складено" : "Не складено";
-
-      summaryNoteEl.textContent = completedFullRun
-        ? `Повна спроба (${fullRunTotal} питань) · прохідний поріг ${PASS_PERCENTAGE}%.`
-        : `Дострокове завершення (${answeredCount} пройдених питань) · прохідний поріг ${PASS_PERCENTAGE}%.`;
+      if (completedFullRun) {
+        badgeEl.className = passed ? "badge-pass" : "badge-fail";
+        badgeEl.textContent = passed ? "Складено" : "Не складено";
+        summaryNoteEl.textContent = `Пройдено всі ${fullRunTotal} питань · прохідний поріг ${PASS_PERCENTAGE}%.`;
+      } else {
+        badgeEl.className = "badge-partial";
+        badgeEl.textContent = "Неповна спроба";
+        summaryNoteEl.textContent = `Пройдено ${answeredCount} із ${fullRunTotal} питань. Статус складання виставляється лише за повний тест на ${fullRunTotal} питань.`;
+      }
 
       document.getElementById("finalScore").textContent = answeredCount > 0
         ? `${score} / ${denominator}`
